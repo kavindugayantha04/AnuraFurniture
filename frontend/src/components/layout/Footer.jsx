@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Facebook, Instagram, Youtube, Phone, Mail, MapPin, ArrowRight, Send } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import BrandLogo from '../ui/BrandLogo';
 
 const QUICK_LINKS = [
   { path: '/', label: 'Home' },
@@ -32,11 +33,11 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Link to="/" className="flex items-center gap-3 mb-5">
-              <div className="w-12 h-12 rounded-xl bg-primary-800 flex items-center justify-center text-white font-black text-2xl shadow-glow">A</div>
+            <Link to="/" className="flex items-center gap-4 mb-5" aria-label="Anura Furniture – Dekatana home">
+              <BrandLogo forDarkBg size="xl" className="h-24 w-24 drop-shadow-lg" />
               <div>
                 <p className="font-display font-bold text-white text-lg leading-tight">Anura Furniture</p>
-                <p className="text-xs text-gray-400 leading-tight">Dekatana</p>
+                <p className="text-xs text-gray-400 leading-tight tracking-widest uppercase">Dekatana</p>
               </div>
             </Link>
             <p className="text-gray-400 text-sm mb-2 font-medium italic">"Furniture කලාවේ මහ ගෙදර"</p>
