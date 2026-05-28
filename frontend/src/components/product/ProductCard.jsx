@@ -70,13 +70,13 @@ export default function ProductCard({ product }) {
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-            {product.isNewArrival && <span className="badge bg-green-500 text-white text-xs">New</span>}
-            {product.isBestSeller && <span className="badge bg-gold-500 text-white text-xs">Best Seller</span>}
-            {product.isTrending && <span className="badge bg-cyan-500 text-white text-xs">Trending</span>}
-            {product.discount > 0 && <span className="badge bg-red-500 text-white text-xs">-{product.discount}%</span>}
+            {product.isNewArrival && <span className="badge bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs">New</span>}
+            {product.isBestSeller && <span className="badge bg-gradient-to-r from-gold-400 to-gold-600 text-white text-xs">Best Seller</span>}
+            {product.isTrending && <span className="badge bg-gradient-to-r from-cyan-400 to-cyan-600 text-white text-xs">Trending</span>}
+            {product.discount > 0 && <span className="badge bg-gradient-to-r from-red-500 to-rose-600 text-white text-xs">-{product.discount}%</span>}
             {product.stock === 0 && <span className="badge bg-gray-500 text-white text-xs">Out of Stock</span>}
             {product.stock > 0 && product.stock <= 5 && (
-              <span className="badge bg-orange-500 text-white text-xs">Only {product.stock} left!</span>
+              <span className="badge bg-gradient-to-r from-orange-400 to-orange-600 text-white text-xs">Only {product.stock} left!</span>
             )}
           </div>
 
@@ -121,9 +121,9 @@ export default function ProductCard({ product }) {
 
         {/* Info */}
         <div className="p-4">
-          <p className="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide mb-1">
+          <span className="inline-block text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full mb-2">
             {product.category?.name || 'Furniture'}
-          </p>
+          </span>
           <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-snug mb-2 line-clamp-2 group-hover:text-primary-700 dark:group-hover:text-primary-300 transition-colors">
             {product.name}
           </h3>
