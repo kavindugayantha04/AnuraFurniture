@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import BrandLogo from './BrandLogo';
 
 export default function LoadingScreen() {
   return (
@@ -9,23 +10,14 @@ export default function LoadingScreen() {
         transition={{ duration: 0.5 }}
         className="text-center"
       >
-        {/* Logo */}
         <motion.div
-          animate={{ rotateY: [0, 360] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-          className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-600 to-cyan-500 flex items-center justify-center mx-auto mb-6 shadow-glow"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="mx-auto mb-6"
         >
-          <span className="text-white font-display font-bold text-3xl">A</span>
+          <BrandLogo forDarkBg size="3xl" className="h-40 w-40 mx-auto drop-shadow-[0_0_24px_rgba(34,211,238,0.35)]" />
         </motion.div>
-
-        <motion.h2
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="font-display text-2xl font-bold text-white mb-2"
-        >
-          Anura Furniture
-        </motion.h2>
 
         <motion.p
           initial={{ opacity: 0 }}

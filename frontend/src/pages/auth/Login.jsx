@@ -8,6 +8,7 @@ import { loginUser, clearError } from '../../store/slices/authSlice';
 import { fetchCart } from '../../store/slices/cartSlice';
 import { fetchWishlist } from '../../store/slices/wishlistSlice';
 import toast from 'react-hot-toast';
+import BrandLogo from '../../components/ui/BrandLogo';
 
 export default function Login() {
   const dispatch = useDispatch();
@@ -57,10 +58,9 @@ export default function Login() {
             <div className="absolute bottom-20 right-20 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl animate-pulse-soft" style={{ animationDelay: '2s' }} />
           </div>
           <div className="relative z-10 text-white text-center max-w-sm">
-            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary-500 to-cyan-500 flex items-center justify-center mx-auto mb-8 shadow-glow-cyan animate-float">
-              <span className="text-white font-display font-bold text-4xl">A</span>
+            <div className="mx-auto mb-8 animate-float">
+              <BrandLogo forDarkBg size="3xl" className="h-44 w-44 mx-auto drop-shadow-[0_0_28px_rgba(34,211,238,0.4)]" />
             </div>
-            <h1 className="font-display text-4xl font-bold mb-4">Anura Furniture</h1>
             <p className="text-cyan-300 italic text-lg mb-6">Furniture කලාවේ මහ ගෙදර</p>
             <p className="text-gray-400 leading-relaxed">
               Welcome back! Sign in to access your orders, wishlist, and personalized AI recommendations.
@@ -92,8 +92,8 @@ export default function Login() {
             <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-8 md:p-10">
               {/* Header */}
               <div className="text-center mb-8">
-                <div className="lg:hidden w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-600 to-cyan-500 flex items-center justify-center mx-auto mb-4 shadow-glow">
-                  <span className="text-white font-display font-bold text-xl">A</span>
+                <div className="lg:hidden mx-auto mb-4">
+                  <BrandLogo size="xl" className="h-24 w-24 drop-shadow-md" />
                 </div>
                 <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white">Welcome Back</h2>
                 <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Sign in to your account</p>

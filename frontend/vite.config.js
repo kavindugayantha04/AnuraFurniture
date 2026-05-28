@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'logo.png', 'robots.txt'],
+      includeAssets: ['logo-af.png', 'logo-af-dark.png', 'robots.txt'],
       manifest: {
         name: 'Anura Furniture – Dekatana',
         short_name: 'Anura Furniture',
@@ -17,8 +17,8 @@ export default defineConfig({
         display: 'standalone',
         start_url: '/',
         icons: [
-          { src: '/logo.png', sizes: '192x192', type: 'image/png' },
-          { src: '/logo.png', sizes: '512x512', type: 'image/png' },
+          { src: '/logo-af.png', sizes: '192x192', type: 'image/png' },
+          { src: '/logo-af.png', sizes: '512x512', type: 'image/png' },
         ],
       },
       workbox: {
