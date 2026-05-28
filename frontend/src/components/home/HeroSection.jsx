@@ -14,7 +14,7 @@ const slides = [
     desc: 'Discover exquisite furniture crafted for modern Sri Lankan homes. From timeless classics to contemporary masterpieces.',
     primaryCta: { label: 'Explore Collection', href: '/shop' },
     secondaryCta: { label: 'AI Room Designer', href: '/ai-room-designer' },
-    accent: 'from-primary-800 via-primary-600 to-cyan-500',
+    accent: 'from-primary-400 via-cyan-300 to-cyan-400',
     bgAccent: 'from-primary-950 via-primary-900 to-slate-900',
   },
   {
@@ -27,7 +27,7 @@ const slides = [
     desc: 'Work with our designers to create furniture that perfectly fits your vision, space, and budget.',
     primaryCta: { label: 'Custom Order', href: '/custom-order' },
     secondaryCta: { label: 'View Gallery', href: '/shop' },
-    accent: 'from-cyan-700 via-primary-700 to-primary-900',
+    accent: 'from-cyan-300 via-primary-300 to-primary-400',
     bgAccent: 'from-slate-950 via-cyan-950 to-primary-950',
   },
   {
@@ -40,9 +40,15 @@ const slides = [
     desc: 'Affordable luxury for every Sri Lankan family. Spread payments with Koko and enjoy your dream furniture today.',
     primaryCta: { label: 'Shop Now', href: '/shop' },
     secondaryCta: { label: 'AI Recommendations', href: '/ai-recommendations' },
-    accent: 'from-gold-500 via-primary-700 to-primary-900',
+    accent: 'from-gold-300 via-gold-400 to-cyan-300',
     bgAccent: 'from-primary-950 via-slate-900 to-gray-950',
   },
+];
+
+const showcaseImages = [
+  { src: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=80', alt: 'Velvet sofa', label: 'Living Room', span: 'row-span-2' },
+  { src: 'https://images.unsplash.com/photo-1611967164521-abae8fba4668?w=400&q=80', alt: 'Accent chair', label: 'Seating', span: '' },
+  { src: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=400&q=80', alt: 'Bedroom', label: 'Bedroom', span: '' },
 ];
 
 export default function HeroSection() {
@@ -167,12 +173,20 @@ export default function HeroSection() {
                 transition={{ delay: 0.6 }}
                 className="flex items-center gap-6 pt-2"
               >
-                <div className="flex -space-x-2">
-                  {['A', 'B', 'C', 'D'].map((l, i) => (
-                    <div key={l} className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-primary-600 border-2 border-white flex items-center justify-center text-white text-xs font-bold">
-                      {l}
-                    </div>
+                <div className="flex -space-x-3">
+                  {[12, 32, 45, 68].map((id, i) => (
+                    <img
+                      key={id}
+                      src={`https://i.pravatar.cc/64?img=${id}`}
+                      alt="Happy customer"
+                      loading="lazy"
+                      className="w-9 h-9 rounded-full border-2 border-white object-cover shadow-md"
+                      style={{ zIndex: 10 - i }}
+                    />
                   ))}
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-primary-600 border-2 border-white flex items-center justify-center text-white text-[10px] font-bold shadow-md">
+                    15k+
+                  </div>
                 </div>
                 <div>
                   <div className="flex items-center gap-1">
@@ -195,21 +209,31 @@ export default function HeroSection() {
             className="relative hidden lg:block"
           >
             <div className="relative w-full aspect-square max-w-lg mx-auto">
-              {/* Main Showcase */}
-              <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm border border-white/10 overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="grid grid-cols-2 gap-4 p-8 w-full h-full">
-                    {['🛋️', '🪑', '🛏️', '🪞'].map((emoji, i) => (
-                      <motion.div
-                        key={i}
-                        animate={{ y: [0, i % 2 === 0 ? -8 : 8, 0] }}
-                        transition={{ duration: 3 + i, repeat: Infinity, ease: 'easeInOut', delay: i * 0.5 }}
-                        className="rounded-2xl bg-white/10 flex items-center justify-center aspect-square text-6xl hover:bg-white/20 transition-colors cursor-pointer"
-                      >
-                        {emoji}
-                      </motion.div>
-                    ))}
-                  </div>
+              {/* Glow halo behind the showcase */}
+              <div className="absolute -inset-6 rounded-[3rem] bg-gradient-to-br from-cyan-500/20 via-primary-500/10 to-transparent blur-2xl" />
+
+              {/* Bento Showcase with real furniture */}
+              <div className="relative h-full rounded-[2.5rem] p-3 bg-white/5 backdrop-blur-md border border-white/15 shadow-2xl">
+                <div className="grid grid-cols-2 grid-rows-2 gap-3 h-full">
+                  {showcaseImages.map((img, i) => (
+                    <motion.div
+                      key={img.src}
+                      animate={{ y: [0, i % 2 === 0 ? -6 : 6, 0] }}
+                      transition={{ duration: 4 + i, repeat: Infinity, ease: 'easeInOut', delay: i * 0.4 }}
+                      className={`group relative overflow-hidden rounded-2xl ${img.span}`}
+                    >
+                      <img
+                        src={img.src}
+                        alt={img.alt}
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <span className="absolute bottom-2 left-3 text-white text-xs font-semibold tracking-wide drop-shadow">
+                        {img.label}
+                      </span>
+                    </motion.div>
+                  ))}
                 </div>
               </div>
 
