@@ -9,6 +9,7 @@ import {
 import { toggleDarkMode, toggleMobileMenu, setSearchQuery } from '../../store/slices/uiSlice';
 import { logout } from '../../store/slices/authSlice';
 import { openCart } from '../../store/slices/cartSlice';
+import BrandLogo from '../ui/BrandLogo';
 
 const NAV_LINKS = [
   { path: '/', label: 'Home', icon: Home },
@@ -75,13 +76,13 @@ export default function Navbar() {
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass shadow-glass border-b border-white/10' : 'bg-transparent'}`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16 lg:h-18 gap-4">
+          <div className="flex items-center h-[4.5rem] lg:h-20 gap-4">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-10 h-10 rounded-xl bg-primary-800 flex items-center justify-center text-white font-black text-lg shadow-glow">A</div>
+            <Link to="/" className="flex items-center gap-3 flex-shrink-0" aria-label="Anura Furniture – Dekatana home">
+              <BrandLogo autoTone size="lg" className="h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem] drop-shadow-sm" />
               <div className="hidden sm:block">
                 <p className="font-display font-bold text-gray-900 dark:text-white text-sm leading-tight">Anura Furniture</p>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">Dekatana</p>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight tracking-widest uppercase">Dekatana</p>
               </div>
             </Link>
 
