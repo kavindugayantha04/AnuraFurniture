@@ -59,20 +59,20 @@ export default function Home() {
         <div className="absolute top-1/4 -left-20 w-72 h-72 bg-primary-600/20 rounded-full blur-3xl animate-float" />
         <div className="absolute bottom-1/4 -right-20 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '-2s' }} />
 
-        <div className="relative z-10 max-w-5xl mx-auto px-4 text-center pt-24">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 text-center pt-32">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary-800/30 border border-primary-500/30 text-primary-300 text-sm rounded-full mb-6 backdrop-blur-sm">
-              <Sparkles className="w-4 h-4" /> AI-Powered Furniture Experience
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/25 text-white font-medium text-sm rounded-full mb-6 backdrop-blur-md shadow-lg">
+              <Sparkles className="w-4 h-4 text-cyan-300" /> AI-Powered Furniture Experience
             </span>
 
-            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-black text-white mb-4 leading-tight">
-              <span className="text-gradient">Furniture</span>
+            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-black text-white mb-4 leading-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
+              <span className="text-gradient-bright">Furniture</span>
               <br />
               <span className="text-white">කලාවේ</span>{' '}
-              <span className="text-gradient">මහ ගෙදර</span>
+              <span className="text-gradient-bright">මහ ගෙදර</span>
             </h1>
 
-            <p className="text-gray-300 text-lg sm:text-xl mb-8 max-w-2xl mx-auto">
+            <p className="text-gray-200 text-lg sm:text-xl mb-8 max-w-2xl mx-auto drop-shadow">
               Transform your space with Sri Lanka's most premium furniture collection. Crafted with artistry, delivered with care.
             </p>
 

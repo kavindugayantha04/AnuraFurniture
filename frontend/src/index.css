@@ -270,6 +270,14 @@
     background-clip: text;
   }
 
+  /* Bright gradient for use on DARK backgrounds (hero, banners) */
+  .text-gradient-bright {
+    background: linear-gradient(to right, #67e8f9, #93c5fd, #38bdf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
   .text-gradient-gold {
     background: linear-gradient(to right, #fbbf24, #d97706);
     -webkit-background-clip: text;
