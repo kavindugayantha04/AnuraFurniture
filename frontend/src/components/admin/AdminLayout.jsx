@@ -10,6 +10,7 @@ import {
 import { logoutUser } from '../../store/slices/authSlice';
 import { toggleDarkMode } from '../../store/slices/uiSlice';
 import toast from 'react-hot-toast';
+import BrandLogo from '../ui/BrandLogo';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/admin' },
@@ -42,14 +43,13 @@ export default function AdminLayout({ children }) {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className={`flex items-center gap-3 p-5 border-b border-gray-800 ${collapsed ? 'justify-center' : ''}`}>
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-cyan-500 flex items-center justify-center flex-shrink-0 shadow-glow">
-          <span className="text-white font-display font-bold">A</span>
-        </div>
+        <BrandLogo
+          forDarkBg
+          size={collapsed ? 'md' : 'lg'}
+          className="flex-shrink-0 drop-shadow-md"
+        />
         {!collapsed && (
-          <div>
-            <p className="text-white font-bold text-sm leading-tight">Anura Furniture</p>
-            <p className="text-gray-400 text-xs">Admin Panel</p>
-          </div>
+          <p className="text-gray-400 text-xs font-medium">Admin Panel</p>
         )}
       </div>
 
