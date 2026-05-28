@@ -6,6 +6,7 @@ import { Helmet } from 'react-helmet-async';
 import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight, Check } from 'lucide-react';
 import { registerUser, clearError } from '../../store/slices/authSlice';
 import toast from 'react-hot-toast';
+import BrandLogo from '../../components/ui/BrandLogo';
 
 export default function Register() {
   const dispatch = useDispatch();
@@ -76,8 +77,8 @@ export default function Register() {
         >
           <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-8 md:p-10">
             <div className="text-center mb-8">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-600 to-cyan-500 flex items-center justify-center mx-auto mb-4 shadow-glow">
-                <span className="text-white font-display font-bold text-xl">A</span>
+              <div className="mx-auto mb-4">
+                <BrandLogo size="xl" className="h-24 w-24 drop-shadow-md" />
               </div>
               <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white">Create Your Account</h2>
               <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Join 15,000+ happy customers</p>
