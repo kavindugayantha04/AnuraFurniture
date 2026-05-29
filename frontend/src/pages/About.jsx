@@ -11,10 +11,10 @@ const values = [
 ];
 
 const team = [
-  { name: 'Anura Pathirana', role: 'Founder & CEO', desc: 'Furniture maestro with 30+ years of craftsmanship expertise', emoji: '👨‍💼' },
+  { name: 'U.A. Piyasena', role: 'Founder', desc: 'Furniture maestro with 30+ years of craftsmanship expertise', emoji: '👨‍💼' },
+  { name: 'U.A.M. Chandika', role: 'Owner & Managing Director', desc: 'Leading Anura Furniture\'s vision, growth and day-to-day operations', emoji: '👨‍💼' },
   { name: 'Chamari Silva', role: 'Head of Design', desc: 'Award-winning interior designer shaping Sri Lanka\'s furniture aesthetic', emoji: '👩‍🎨' },
   { name: 'Ruwan Fernando', role: 'Operations Director', desc: 'Ensuring seamless delivery and customer experience island-wide', emoji: '👨‍💻' },
-  { name: 'Nilmini Perera', role: 'Customer Experience', desc: '24/7 support specialist dedicated to your satisfaction', emoji: '👩‍💼' },
 ];
 
 export default function About() {
@@ -73,7 +73,7 @@ export default function About() {
                     Anura Furniture – Dekatana began in 2010 as a small workshop in Kadawatha with a simple vision: to bring world-class furniture craftsmanship to every Sri Lankan home at an accessible price.
                   </p>
                   <p>
-                    Founded by master craftsman Anura Pathirana, our journey began with hand-crafting custom furniture for clients across Colombo. Today, we have grown into Sri Lanka's most trusted AI-powered furniture destination, with a showroom spanning 15,000 sq. ft. and an online store serving customers island-wide.
+                    Founded by master craftsman U.A. Piyasena, our journey began with hand-crafting custom furniture for clients across Colombo. Today, we have grown into Sri Lanka's most trusted AI-powered furniture destination, with a showroom spanning 15,000 sq. ft. and an online store serving customers island-wide.
                   </p>
                   <p>
                     We blend 14 years of traditional craftsmanship with modern technology – including AI-powered design tools, virtual room visualization, and smart recommendation engines – to deliver an unmatched furniture experience.
