@@ -152,7 +152,7 @@ export default function About() {
             <h2 className="font-display text-3xl font-bold mb-6">Visit Our Showroom</h2>
             <div className="flex items-center justify-center gap-3 mb-4">
               <MapPin className="w-5 h-5 text-cyan-400" />
-              <p className="text-gray-300">Dekatana Junction, Kadawatha, Western Province, Sri Lanka</p>
+              <p className="text-gray-300">Dekatana, Western Province, Sri Lanka</p>
             </div>
             <p className="text-gray-400 mb-8">Monday – Saturday: 8:30 AM – 6:30 PM | Sunday: 10:00 AM – 4:00 PM</p>
             <div className="flex flex-wrap gap-4 justify-center">

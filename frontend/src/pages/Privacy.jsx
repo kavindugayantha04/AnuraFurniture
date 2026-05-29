@@ -49,7 +49,7 @@ const sections = [
   },
   {
     title: '12. Contact',
-    body: 'Privacy questions: anurafurniture238@gmail.com, +94 72 330 3946, or our Contact page at Dekatana, Kadawatha.',
+    body: 'Privacy questions: anurafurniture238@gmail.com, +94 72 330 3946, or our Contact page at Dekatana, Western Province, Sri Lanka.',
   },
 ];
 

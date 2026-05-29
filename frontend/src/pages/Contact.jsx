@@ -53,7 +53,7 @@ export default function Contact() {
                 <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white mb-6">Contact Information</h2>
                 <div className="space-y-5">
                   {[
-                    { icon: MapPin, label: 'Showroom Address', value: 'Dekatana Junction, Kadawatha\nWestern Province, Sri Lanka', href: 'https://maps.google.com' },
+                    { icon: MapPin, label: 'Showroom Address', value: 'Dekatana, Western Province, Sri Lanka', href: 'https://maps.google.com' },
                     { icon: Phone, label: 'Phone / WhatsApp', value: '+94 72 330 3946', href: 'tel:+94723303946' },
                     { icon: Mail, label: 'Email', value: 'anurafurniture238@gmail.com', href: 'mailto:anurafurniture238@gmail.com' },
                     { icon: Clock, label: 'Working Hours', value: 'Mon – Sat: 8:30 AM – 6:30 PM\nSunday: 10:00 AM – 4:00 PM', href: null },
@@ -108,7 +108,7 @@ export default function Contact() {
               <div className="rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 aspect-video bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                 <div className="text-center">
                   <MapPin className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">Kadawatha, Western Province</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">Dekatana, Western Province, Sri Lanka</p>
                   <a href="https://maps.google.com" target="_blank" rel="noreferrer" className="text-primary-600 dark:text-primary-400 text-xs hover:underline mt-1 block">
                     Open in Google Maps →
                   </a>
