@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const crypto = require('crypto');
 const User = require('../models/User');
 const sendTokenResponse = require('../utils/generateToken');
+const { sanitizeUser } = require('../config/admin');
 const { sendEmail, emailTemplates } = require('../utils/sendEmail');
 
 // @desc    Register user
@@ -72,7 +73,7 @@ exports.logout = asyncHandler(async (req, res) => {
 // @desc    Get current user
 exports.getMe = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id).populate('wishlist', 'name images price finalPrice');
-  res.status(200).json({ success: true, user });
+  res.status(200).json({ success: true, user: sanitizeUser(user) });
 });
 
 // @desc    Update profile
@@ -169,6 +170,34 @@ exports.updatePreferences = asyncHandler(async (req, res) => {
     { new: true }
   );
   res.status(200).json({ success: true, user });
+});
+
+// @desc    Google OAuth callback — redirect to frontend with JWT
+exports.googleCallback = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    res.redirect(`${process.env.CLIENT_URL}/login?error=google_failed`);
+    return;
+  }
+
+  let redirect = '/';
+  if (req.query.state) {
+    try {
+      const parsed = JSON.parse(Buffer.from(req.query.state, 'base64url').toString('utf8'));
+      if (parsed.redirect && typeof parsed.redirect === 'string' && parsed.redirect.startsWith('/')) {
+        redirect = parsed.redirect;
+      }
+    } catch {
+      // ignore invalid state
+    }
+  }
+
+  const token = req.user.getSignedJwtToken();
+  const params = new URLSearchParams({
+    token,
+    redirect,
+  });
+
+  res.redirect(`${process.env.CLIENT_URL}/auth/google/callback?${params.toString()}`);
 });
 
 // @desc    Update FCM token

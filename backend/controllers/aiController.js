@@ -1,9 +1,30 @@
 const asyncHandler = require('express-async-handler');
-const OpenAI = require('openai');
+const { GoogleGenAI } = require('@google/genai');
 const Product = require('../models/Product');
 const User = require('../models/User');
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const GEMINI_KEY = process.env.GEMINI_API_KEY;
+const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+
+const ai = GEMINI_KEY ? new GoogleGenAI({ apiKey: GEMINI_KEY }) : null;
+
+// Map an OpenAI-style chat history to Gemini "contents" format.
+const historyToContents = (history = []) =>
+  history
+    .filter((m) => m.role === 'user' || m.role === 'assistant')
+    .map((m) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: String(m.content || '') }],
+    }));
+
+// Fetch a remote image and turn it into a Gemini inline image part.
+const urlToInlinePart = async (url) => {
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Failed to fetch image: ${resp.status}`);
+  const mimeType = resp.headers.get('content-type') || 'image/jpeg';
+  const buffer = Buffer.from(await resp.arrayBuffer());
+  return { inlineData: { mimeType, data: buffer.toString('base64') } };
+};
 
 // @desc    AI Chatbot
 exports.chatbot = asyncHandler(async (req, res) => {
@@ -29,22 +50,33 @@ Product categories: Sofas, Beds, Dining Tables, Office Furniture, Wardrobes, TV 
 Always be helpful, friendly, and guide customers toward making purchases. You can respond in both Sinhala and English.
 If asked about specific products, suggest they browse the shop or use AI recommendations.`;
 
-  const messages = [
-    { role: 'system', content: systemPrompt },
-    ...history.slice(-10),
-    { role: 'user', content: message },
-  ];
+  if (!ai) {
+    return res.status(200).json({
+      success: true,
+      reply: "Hi! I'm Anura AI. Our assistant is being set up right now — meanwhile, please browse our shop or contact us on WhatsApp and we'll be happy to help!",
+      usage: null,
+    });
+  }
 
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages,
-    max_tokens: 500,
-    temperature: 0.7,
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents: [
+      ...historyToContents(history.slice(-10)),
+      { role: 'user', parts: [{ text: message }] },
+    ],
+    config: {
+      systemInstruction: systemPrompt,
+      temperature: 0.7,
+      maxOutputTokens: 800,
+      thinkingConfig: { thinkingBudget: 0 },
+    },
   });
 
-  const reply = completion.choices[0].message.content;
-
-  res.status(200).json({ success: true, reply, usage: completion.usage });
+  res.status(200).json({
+    success: true,
+    reply: response.text,
+    usage: response.usageMetadata || null,
+  });
 });
 
 // @desc    AI Product Recommendations
@@ -67,10 +99,10 @@ exports.getRecommendations = asyncHandler(async (req, res) => {
 
   let recommendedProducts = products;
 
-  if (products.length > 0 && process.env.OPENAI_API_KEY) {
+  if (products.length > 0 && ai) {
     try {
       const productList = products.map(p => `- ${p.name}: Rs. ${p.price}, Rating: ${p.ratings.toFixed(1)}, Style: ${p.style?.join(', ')}`).join('\n');
-      
+
       const prompt = `Based on the customer's preferences:
 Budget: ${budget ? `Rs. ${typeof budget === 'object' ? budget.max : budget}` : 'flexible'}
 Room Type: ${roomType || 'any'}
@@ -80,23 +112,26 @@ Color preference: ${colors || 'any'}
 From these available products:
 ${productList}
 
-Select and rank the top 6 most suitable products. Return ONLY a JSON array of product names in order of recommendation, like: ["Product A", "Product B", ...]`;
+Select and rank the top 6 most suitable products. Return ONLY a JSON object of the form {"products": ["Product A", "Product B", ...]} in order of recommendation.`;
 
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 300,
-        temperature: 0.3,
-        response_format: { type: 'json_object' },
+      const response = await ai.models.generateContent({
+        model: MODEL,
+        contents: prompt,
+        config: {
+          temperature: 0.3,
+          maxOutputTokens: 400,
+          responseMimeType: 'application/json',
+          thinkingConfig: { thinkingBudget: 0 },
+        },
       });
 
       try {
-        const parsed = JSON.parse(completion.choices[0].message.content);
+        const parsed = JSON.parse(response.text);
         const rankedNames = parsed.products || parsed.recommendations || Object.values(parsed)[0];
         if (Array.isArray(rankedNames)) {
           const ranked = [];
           for (const name of rankedNames) {
-            const found = products.find(p => p.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(p.name.toLowerCase()));
+            const found = products.find(p => p.name.toLowerCase().includes(String(name).toLowerCase()) || String(name).toLowerCase().includes(p.name.toLowerCase()));
             if (found) ranked.push(found);
           }
           recommendedProducts = ranked.length >= 3 ? ranked : products.slice(0, 6);
@@ -105,7 +140,7 @@ Select and rank the top 6 most suitable products. Return ONLY a JSON array of pr
         recommendedProducts = products.slice(0, 6);
       }
     } catch (err) {
-      console.error('OpenAI error:', err.message);
+      console.error('Gemini error:', err.message);
       recommendedProducts = products.slice(0, 6);
     }
   }
@@ -124,25 +159,28 @@ exports.aiSearch = asyncHandler(async (req, res) => {
   let searchFilters = { isActive: true };
   let aiInterpretation = null;
 
-  if (process.env.OPENAI_API_KEY) {
+  if (ai) {
     try {
       const prompt = `Parse this furniture search query and extract filters as JSON:
 Query: "${searchQuery}"
 
 Extract: { keyword, maxPrice, minPrice, style, roomType, colors, category }
-All fields optional. Prices in LKR. 
-Example: "modern blue sofa under 150000" → { "keyword": "sofa", "maxPrice": 150000, "style": ["modern"], "colors": ["blue"], "category": "sofa" }
+All fields optional. Prices in LKR.
+Example: "modern blue sofa under 150000" -> { "keyword": "sofa", "maxPrice": 150000, "style": ["modern"], "colors": ["blue"], "category": "sofa" }
 Return valid JSON only.`;
 
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 200,
-        temperature: 0,
-        response_format: { type: 'json_object' },
+      const response = await ai.models.generateContent({
+        model: MODEL,
+        contents: prompt,
+        config: {
+          temperature: 0,
+          maxOutputTokens: 300,
+          responseMimeType: 'application/json',
+          thinkingConfig: { thinkingBudget: 0 },
+        },
       });
 
-      const parsed = JSON.parse(completion.choices[0].message.content);
+      const parsed = JSON.parse(response.text);
       aiInterpretation = parsed;
 
       if (parsed.keyword) searchFilters.$text = { $search: parsed.keyword };
@@ -178,16 +216,9 @@ Return valid JSON only.`;
 exports.designRoom = asyncHandler(async (req, res) => {
   const { roomImageUrl, selectedProducts, roomType, style, prompt: userPrompt } = req.body;
 
-  const systemPrompt = `You are an expert interior designer AI for Anura Furniture – Dekatana. 
+  const systemPrompt = `You are an expert interior designer AI for Anura Furniture – Dekatana.
 Analyze room images and provide detailed, actionable design suggestions.
 Always recommend specific furniture categories and styles available at Anura Furniture.`;
-
-  const messages = [{ role: 'system', content: systemPrompt }];
-  const userContent = [];
-
-  if (roomImageUrl) {
-    userContent.push({ type: 'image_url', image_url: { url: roomImageUrl } });
-  }
 
   const textPrompt = `${userPrompt || `Please analyze this ${roomType || 'room'} and provide furniture recommendations.`}
 ${selectedProducts?.length ? `Selected furniture: ${selectedProducts.join(', ')}` : ''}
@@ -200,19 +231,35 @@ Provide:
 4. Layout tips
 5. Estimated budget range in LKR`;
 
-  userContent.push({ type: 'text', text: textPrompt });
-  messages.push({ role: 'user', content: userContent });
-
   let design;
-  if (process.env.OPENAI_API_KEY) {
-    const completion = await openai.chat.completions.create({
-      model: roomImageUrl ? 'gpt-4o' : 'gpt-4o-mini',
-      messages,
-      max_tokens: 800,
-      temperature: 0.7,
-    });
-    design = completion.choices[0].message.content;
-  } else {
+  if (ai) {
+    try {
+      const parts = [];
+      if (roomImageUrl) {
+        try {
+          parts.push(await urlToInlinePart(roomImageUrl));
+        } catch (imgErr) {
+          console.error('Room image fetch failed:', imgErr.message);
+        }
+      }
+      parts.push({ text: textPrompt });
+
+      const response = await ai.models.generateContent({
+        model: MODEL,
+        contents: [{ role: 'user', parts }],
+        config: {
+          systemInstruction: systemPrompt,
+          temperature: 0.7,
+          maxOutputTokens: 1200,
+        },
+      });
+      design = response.text;
+    } catch (err) {
+      console.error('Gemini design error:', err.message);
+    }
+  }
+
+  if (!design) {
     design = `**Room Design Suggestions for ${roomType || 'Your'} Room:**
 
 Based on your preferences for ${style || 'modern'} style:
@@ -266,7 +313,7 @@ exports.getSalesInsights = asyncHandler(async (req, res) => {
   ]);
 
   let insights = '';
-  if (process.env.OPENAI_API_KEY) {
+  if (ai) {
     try {
       const dataContext = `
 Monthly Revenue: ${JSON.stringify(revenueData)}
@@ -275,18 +322,18 @@ Recent Orders: ${recentOrders.length} orders in last 30 days
 Total Revenue (30 days): Rs. ${recentOrders.reduce((a, o) => a + o.totalPrice, 0).toLocaleString()}
 `;
 
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [{
-          role: 'user',
-          content: `As a business analyst for Anura Furniture (Sri Lankan furniture store), analyze this sales data and provide 5 key insights and 3 actionable recommendations:\n${dataContext}`,
-        }],
-        max_tokens: 600,
-        temperature: 0.5,
+      const response = await ai.models.generateContent({
+        model: MODEL,
+        contents: `As a business analyst for Anura Furniture (Sri Lankan furniture store), analyze this sales data and provide 5 key insights and 3 actionable recommendations:\n${dataContext}`,
+        config: {
+          temperature: 0.5,
+          maxOutputTokens: 900,
+          thinkingConfig: { thinkingBudget: 0 },
+        },
       });
-      insights = completion.choices[0].message.content;
+      insights = response.text;
     } catch (err) {
-      insights = 'AI insights unavailable. Check your OpenAI API key.';
+      insights = 'AI insights unavailable. Check your GEMINI_API_KEY.';
     }
   }
 

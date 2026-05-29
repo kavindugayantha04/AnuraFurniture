@@ -12,6 +12,8 @@ const path = require('path');
 
 dotenv.config();
 
+require('./config/passport');
+
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/error');
 
@@ -27,6 +29,7 @@ const customOrderRoutes = require('./routes/customOrderRoutes');
 const couponRoutes = require('./routes/couponRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const bannerRoutes = require('./routes/bannerRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 
 connectDB();
 
@@ -82,6 +85,7 @@ app.use('/api/custom-orders', customOrderRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/banners', bannerRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

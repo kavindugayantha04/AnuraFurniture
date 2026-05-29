@@ -4,7 +4,7 @@ const asyncHandler = require('express-async-handler');
 const CustomOrder = require('../models/CustomOrder');
 const { protect, authorize, optionalAuth } = require('../middleware/auth');
 const { uploadCustomOrder } = require('../config/cloudinary');
-const { sendEmail } = require('../utils/sendEmail');
+const { sendEmail, emailTemplates, notifyStore } = require('../utils/sendEmail');
 
 router.post('/', optionalAuth, uploadCustomOrder.array('images', 5), asyncHandler(async (req, res) => {
   const images = req.files ? req.files.map(f => ({ url: f.path, publicId: f.filename })) : [];
@@ -27,6 +27,13 @@ router.post('/', optionalAuth, uploadCustomOrder.array('images', 5), asyncHandle
       </div>`,
     });
   } catch (e) { console.error(e); }
+
+  try {
+    await notifyStore({
+      subject: `[Anura Furniture] Custom order ${customOrder.reference}`,
+      html: emailTemplates.storeCustomOrder(customOrder, req.body),
+    });
+  } catch (e) { console.error('Store notify failed:', e); }
 
   res.status(201).json({ success: true, customOrder });
 }));

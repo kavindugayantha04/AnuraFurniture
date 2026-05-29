@@ -23,7 +23,7 @@ const productSchema = new mongoose.Schema(
     descriptionSI: String,
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
     brand: { type: String, default: 'Anura Furniture' },
-    sku: { type: String, unique: true },
+    sku: { type: String, unique: true, sparse: true },
     images: [
       {
         url: { type: String, required: true },

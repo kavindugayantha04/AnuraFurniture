@@ -1,10 +1,8 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const bcrypt = require('bcryptjs');
 
 dotenv.config();
 
-const User = require('../models/User');
 const Category = require('../models/Category');
 const Product = require('../models/Product');
 
@@ -22,34 +20,17 @@ const categories = [
   { name: "Kids' Room", nameSI: 'ළමා කාමරය', slug: 'kids-room', icon: '🧸', isActive: true, sortOrder: 6 },
 ];
 
-const adminUser = {
-  name: 'Admin User',
-  email: 'admin@anurafurniture.lk',
-  password: 'Admin@123',
-  role: 'admin',
-  isVerified: true,
-  phone: '+94771234567',
-};
-
 const importData = async () => {
   try {
     await connectDB();
 
-    // Clear existing data
-    await User.deleteMany();
+    // Sample catalog only — does not delete or create users (use npm run seed:admin)
     await Category.deleteMany();
     await Product.deleteMany();
 
-    // Create admin
-    const hashedPassword = await bcrypt.hash(adminUser.password, 12);
-    await User.create({ ...adminUser, password: hashedPassword });
-    console.log('✅ Admin user created: admin@anurafurniture.lk / Admin@123');
-
-    // Create categories
     const createdCategories = await Category.insertMany(categories);
     console.log(`✅ ${createdCategories.length} categories seeded`);
 
-    // Sample products
     const livingRoom = createdCategories.find(c => c.slug === 'living-room');
     const bedroom = createdCategories.find(c => c.slug === 'bedroom');
 
@@ -58,6 +39,7 @@ const importData = async () => {
         name: 'Royal Comfort Sofa',
         nameSI: 'රාජකීය සෝෆා',
         slug: 'royal-comfort-sofa',
+        sku: 'AF-SOF-001',
         description: 'Premium 3-seater sofa with velvet upholstery and solid wood frame. Perfect for your living room.',
         descriptionSI: 'ප්‍රිමියම් 3-ආසන සෝෆා',
         category: livingRoom._id,
@@ -74,6 +56,7 @@ const importData = async () => {
         name: 'Modern Platform Bed',
         nameSI: 'නූතන ඇඳ',
         slug: 'modern-platform-bed',
+        sku: 'AF-BED-001',
         description: 'Contemporary platform bed with storage drawers. Available in King and Queen sizes.',
         descriptionSI: 'නූතන ඇඳ',
         category: bedroom._id,
@@ -90,6 +73,7 @@ const importData = async () => {
         name: 'Executive Office Chair',
         nameSI: 'කාර්යාල පුටුව',
         slug: 'executive-office-chair',
+        sku: 'AF-CHR-001',
         description: 'Ergonomic executive chair with lumbar support and adjustable armrests.',
         descriptionSI: 'කාර්යාල පුටුව',
         category: createdCategories.find(c => c.slug === 'office')._id,
@@ -106,8 +90,8 @@ const importData = async () => {
     await Product.insertMany(sampleProducts);
     console.log(`✅ ${sampleProducts.length} sample products seeded`);
 
-    console.log('\n🎉 Database seeded successfully!\n');
-    console.log('Admin: admin@anurafurniture.lk | Password: Admin@123');
+    console.log('\n🎉 Catalog seeded successfully.');
+    console.log('   To create an admin account, set ADMIN_EMAIL and ADMIN_PASSWORD in .env, then run: npm run seed:admin\n');
     process.exit(0);
   } catch (err) {
     console.error('❌ Seeding error:', err);
@@ -118,10 +102,9 @@ const importData = async () => {
 const destroyData = async () => {
   try {
     await connectDB();
-    await User.deleteMany();
     await Category.deleteMany();
     await Product.deleteMany();
-    console.log('💥 Data destroyed!');
+    console.log('💥 Catalog data destroyed (users were not removed).');
     process.exit(0);
   } catch (err) {
     console.error('❌ Error:', err);

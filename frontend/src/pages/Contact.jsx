@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Clock, Send, MessageCircle, Facebook, Instagram } from 'lucide-react';
 import toast from 'react-hot-toast';
+import api from '../services/api';
 
 export default function Contact() {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
@@ -11,11 +12,21 @@ export default function Contact() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.subject) {
+      toast.error('Please select a subject');
+      return;
+    }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1500));
-    setSent(true);
-    setLoading(false);
-    toast.success('Message sent! We\'ll reply within 24 hours.');
+    try {
+      await api.post('/contact', formData);
+      setSent(true);
+      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+      toast.success('Message sent! We\'ll reply within 24 hours.');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not send message. Try WhatsApp or call us.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,7 +55,7 @@ export default function Contact() {
                   {[
                     { icon: MapPin, label: 'Showroom Address', value: 'Dekatana Junction, Kadawatha\nWestern Province, Sri Lanka', href: 'https://maps.google.com' },
                     { icon: Phone, label: 'Phone / WhatsApp', value: '+94 72 330 3946', href: 'tel:+94723303946' },
-                    { icon: Mail, label: 'Email', value: 'info@anurafurniture.lk\nsales@anurafurniture.lk', href: 'mailto:info@anurafurniture.lk' },
+                    { icon: Mail, label: 'Email', value: 'anurafurniture238@gmail.com', href: 'mailto:anurafurniture238@gmail.com' },
                     { icon: Clock, label: 'Working Hours', value: 'Mon – Sat: 8:30 AM – 6:30 PM\nSunday: 10:00 AM – 4:00 PM', href: null },
                   ].map(({ icon: Icon, label, value, href }) => (
                     <div key={label} className="flex items-start gap-4">
@@ -138,12 +149,12 @@ export default function Contact() {
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Subject *</label>
                       <select value={formData.subject} onChange={(e) => setFormData(p => ({ ...p, subject: e.target.value }))} required className="input-field">
                         <option value="">Select a subject</option>
-                        <option>Product Inquiry</option>
-                        <option>Custom Furniture Order</option>
-                        <option>Delivery & Installation</option>
-                        <option>Warranty Claim</option>
-                        <option>Interior Design Consultation</option>
-                        <option>Other</option>
+                        <option value="Product Inquiry">Product Inquiry</option>
+                        <option value="Custom Furniture Order">Custom Furniture Order</option>
+                        <option value="Delivery & Installation">Delivery & Installation</option>
+                        <option value="Warranty Claim">Warranty Claim</option>
+                        <option value="Interior Design Consultation">Interior Design Consultation</option>
+                        <option value="Other">Other</option>
                       </select>
                     </div>
                     <div>

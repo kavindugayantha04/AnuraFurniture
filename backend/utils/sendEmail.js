@@ -1,5 +1,8 @@
 const nodemailer = require('nodemailer');
 
+/** Inbox for shop alerts (new orders, custom requests) — set STORE_EMAIL in .env */
+const getStoreEmail = () => process.env.STORE_EMAIL?.trim().toLowerCase() || null;
+
 const sendEmail = async ({ to, subject, html, text }) => {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
@@ -11,8 +14,11 @@ const sendEmail = async ({ to, subject, html, text }) => {
     },
   });
 
+  const fromName = process.env.EMAIL_FROM_NAME || 'Anura Furniture';
+  const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+
   const mailOptions = {
-    from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM}>`,
+    from: `"${fromName}" <${fromAddress}>`,
     to,
     subject,
     html,
@@ -20,8 +26,18 @@ const sendEmail = async ({ to, subject, html, text }) => {
   };
 
   const info = await transporter.sendMail(mailOptions);
-  console.log(`📧 Email sent: ${info.messageId}`);
+  console.log(`📧 Email sent to ${to}: ${info.messageId}`);
   return info;
+};
+
+/** Notify the store inbox (STORE_EMAIL) — e.g. new order, custom request */
+const notifyStore = async ({ subject, html, text }) => {
+  const storeEmail = getStoreEmail();
+  if (!storeEmail) {
+    console.warn('⚠️  STORE_EMAIL not set — shop notification skipped');
+    return null;
+  }
+  return sendEmail({ to: storeEmail, subject, html, text });
 };
 
 const emailTemplates = {
@@ -83,6 +99,65 @@ const emailTemplates = {
       </div>
     </div>
   `,
+
+  storeNewOrder: (order, user) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #1e3a8a;">🛒 New order — ${order.orderNumber}</h2>
+      <p><strong>Customer:</strong> ${user.name} (${user.email})</p>
+      <p><strong>Phone:</strong> ${user.phone || '—'}</p>
+      <p><strong>Payment:</strong> ${order.paymentMethod}</p>
+      <p><strong>Total:</strong> Rs. ${order.totalPrice.toLocaleString()}</p>
+      <p><strong>Items:</strong></p>
+      <ul>${order.items.map((i) => `<li>${i.name} × ${i.quantity} — Rs. ${(i.price * i.quantity).toLocaleString()}</li>`).join('')}</ul>
+      <p><a href="${process.env.CLIENT_URL}/admin/orders">View in admin panel</a></p>
+    </div>
+  `,
+
+  storeContactMessage: (body) => {
+    const esc = (s) =>
+      String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #1e3a8a;">📩 New contact form message</h2>
+      <p><strong>Name:</strong> ${esc(body.name)}</p>
+      <p><strong>Email:</strong> <a href="mailto:${esc(body.email)}">${esc(body.email)}</a></p>
+      <p><strong>Phone:</strong> ${esc(body.phone) || '—'}</p>
+      <p><strong>Subject:</strong> ${esc(body.subject)}</p>
+      <p><strong>Message:</strong></p>
+      <p style="white-space: pre-wrap; background: #f8fafc; padding: 16px; border-radius: 8px;">${esc(body.message)}</p>
+      <p style="color: #64748b; font-size: 12px;">Reply directly to ${esc(body.email)}</p>
+    </div>
+  `;
+  },
+
+  contactAutoReply: (body) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #1e3a8a, #0891b2); padding: 24px; text-align: center; border-radius: 12px 12px 0 0;">
+        <h1 style="color: white; margin: 0; font-size: 22px;">Anura Furniture</h1>
+      </div>
+      <div style="padding: 24px; background: #fff;">
+        <p>Dear ${body.name},</p>
+        <p>Thank you for contacting us about <strong>${body.subject}</strong>. We have received your message and will get back to you within 24 hours.</p>
+        <p style="color: #64748b; font-size: 14px;">For urgent inquiries, WhatsApp us at +94 72 330 3946.</p>
+      </div>
+    </div>
+  `,
+
+  storeCustomOrder: (customOrder, body) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #1e3a8a;">🪚 New custom furniture request — ${customOrder.reference}</h2>
+      <p><strong>Name:</strong> ${body.name}</p>
+      <p><strong>Email:</strong> ${body.email}</p>
+      <p><strong>Phone:</strong> ${body.phone || '—'}</p>
+      <p><strong>Type:</strong> ${body.furnitureType}</p>
+      <p><strong>Details:</strong> ${body.description || body.notes || '—'}</p>
+      <p><a href="${process.env.CLIENT_URL}/admin/custom-orders">View in admin panel</a></p>
+    </div>
+  `,
 };
 
-module.exports = { sendEmail, emailTemplates };
+module.exports = { sendEmail, emailTemplates, notifyStore, getStoreEmail };

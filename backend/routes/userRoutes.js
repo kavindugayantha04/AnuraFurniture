@@ -4,6 +4,7 @@ const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 const Product = require('../models/Product');
 const { protect, authorize } = require('../middleware/auth');
+const { isAdminEmail } = require('../config/admin');
 
 // Wishlist
 router.post('/wishlist/toggle', protect, asyncHandler(async (req, res) => {
@@ -45,7 +46,22 @@ router.get('/:id', protect, authorize('admin'), asyncHandler(async (req, res) =>
 
 // Admin – Update user
 router.put('/:id', protect, authorize('admin'), asyncHandler(async (req, res) => {
-  const user = await User.findByIdAndUpdate(req.params.id, { role: req.body.role, isActive: req.body.isActive }, { new: true });
+  const target = await User.findById(req.params.id);
+  if (!target) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+  const updates = { isActive: req.body.isActive };
+  if (req.body.role === 'admin' && !isAdminEmail(target.email)) {
+    res.status(400);
+    throw new Error('Only the designated administrator account can have admin role');
+  }
+  if (req.body.role && isAdminEmail(target.email)) {
+    updates.role = 'admin';
+  } else if (req.body.role) {
+    updates.role = req.body.role === 'admin' ? 'customer' : req.body.role;
+  }
+  const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true });
   res.json({ success: true, user });
 }));
 

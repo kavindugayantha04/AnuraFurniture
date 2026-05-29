@@ -6,7 +6,8 @@ const Cart = require('../models/Cart');
 const Coupon = require('../models/Coupon');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
-const { sendEmail, emailTemplates } = require('../utils/sendEmail');
+const { sendEmail, emailTemplates, notifyStore } = require('../utils/sendEmail');
+const { isAdminUser } = require('../config/admin');
 
 // @desc    Create order
 exports.createOrder = asyncHandler(async (req, res) => {
@@ -112,6 +113,10 @@ exports.createOrder = asyncHandler(async (req, res) => {
       subject: `Order Confirmed – ${order.orderNumber}`,
       html: emailTemplates.orderConfirmation(order, req.user),
     });
+    await notifyStore({
+      subject: `[Anura Furniture] New order ${order.orderNumber}`,
+      html: emailTemplates.storeNewOrder(order, req.user),
+    });
   } catch (err) {
     console.error('Order email failed:', err);
   }
@@ -149,7 +154,7 @@ exports.getOrder = asyncHandler(async (req, res) => {
     throw new Error('Order not found');
   }
 
-  if (order.user._id.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (order.user._id.toString() !== req.user.id && !isAdminUser(req.user)) {
     res.status(403);
     throw new Error('Not authorized');
   }

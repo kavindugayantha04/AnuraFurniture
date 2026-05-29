@@ -20,6 +20,9 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const redirect = searchParams.get('redirect') || '/';
+  const googleAuthHref = `${import.meta.env.VITE_API_URL || '/api'}/auth/google${
+    redirect !== '/' ? `?redirect=${encodeURIComponent(redirect)}` : ''
+  }`;
 
   useEffect(() => {
     if (isAuthenticated) navigate(redirect, { replace: true });
@@ -27,7 +30,10 @@ export default function Login() {
 
   useEffect(() => {
     dispatch(clearError());
-  }, [dispatch]);
+    if (searchParams.get('error') === 'google_failed') {
+      toast.error('Google sign-in failed. Add your Gmail as a test user in Google Cloud, then try again.');
+    }
+  }, [dispatch, searchParams]);
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -195,7 +201,7 @@ export default function Login() {
               </div>
 
               <a
-                href={`${import.meta.env.VITE_API_URL || ''}/auth/google`}
+                href={googleAuthHref}
                 className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium text-sm"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">

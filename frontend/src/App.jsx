@@ -26,6 +26,7 @@ const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
 const OrderDetail = lazy(() => import('./pages/OrderDetail'));
 const MyOrders = lazy(() => import('./pages/MyOrders'));
 const Login = lazy(() => import('./pages/auth/Login'));
+const GoogleCallback = lazy(() => import('./pages/auth/GoogleCallback'));
 const Register = lazy(() => import('./pages/auth/Register'));
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
@@ -85,7 +86,7 @@ function App() {
   }, [isAuthenticated]);
 
   const isAdminRoute = location.pathname.startsWith('/admin');
-  const isAuthRoute = ['/login', '/register', '/forgot-password', '/reset-password'].some(path => location.pathname.startsWith(path));
+  const isAuthRoute = ['/login', '/register', '/forgot-password', '/reset-password', '/auth/google'].some(path => location.pathname.startsWith(path));
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-dark-bg">
@@ -105,6 +106,7 @@ function App() {
               <Route path="/ai-recommendations" element={<PageWrapper><AIRecommendations /></PageWrapper>} />
               <Route path="/ai-room-designer" element={<PageWrapper><AIRoomDesigner /></PageWrapper>} />
               <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
+              <Route path="/auth/google/callback" element={<PageWrapper><GoogleCallback /></PageWrapper>} />
               <Route path="/register" element={<PageWrapper><Register /></PageWrapper>} />
               <Route path="/forgot-password" element={<PageWrapper><ForgotPassword /></PageWrapper>} />
               <Route path="/reset-password/:token" element={<PageWrapper><ResetPassword /></PageWrapper>} />

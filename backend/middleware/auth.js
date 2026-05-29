@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
+const { isAdminUser } = require('../config/admin');
 
 exports.protect = asyncHandler(async (req, res, next) => {
   let token;
@@ -36,6 +37,13 @@ exports.protect = asyncHandler(async (req, res, next) => {
 
 exports.authorize = (...roles) => {
   return (req, res, next) => {
+    if (roles.includes('admin')) {
+      if (!isAdminUser(req.user)) {
+        res.status(403);
+        throw new Error('Admin access is restricted to the designated administrator');
+      }
+      return next();
+    }
     if (!roles.includes(req.user.role)) {
       res.status(403);
       throw new Error(`Role '${req.user.role}' is not authorized`);

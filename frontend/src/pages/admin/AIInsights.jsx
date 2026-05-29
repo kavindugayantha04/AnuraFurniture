@@ -33,7 +33,7 @@ export default function AdminAIInsights() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">AI Sales Insights</h1>
-              <p className="text-gray-400 text-sm">Powered by OpenAI GPT</p>
+              <p className="text-gray-400 text-sm">Powered by Google Gemini</p>
             </div>
           </div>
           <button onClick={fetchInsights} disabled={loading} className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-gray-300 hover:text-white rounded-xl text-sm transition-colors">
