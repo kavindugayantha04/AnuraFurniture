@@ -34,6 +34,8 @@ const Profile = lazy(() => import('./pages/Profile'));
 const Wishlist = lazy(() => import('./pages/Wishlist'));
 const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Privacy = lazy(() => import('./pages/Privacy'));
 const CustomOrder = lazy(() => import('./pages/CustomOrder'));
 const AIRecommendations = lazy(() => import('./pages/AIRecommendations'));
 const AIRoomDesigner = lazy(() => import('./pages/AIRoomDesigner'));
@@ -102,6 +104,9 @@ function App() {
               <Route path="/product/:id" element={<PageWrapper><ProductDetail /></PageWrapper>} />
               <Route path="/about" element={<PageWrapper><About /></PageWrapper>} />
               <Route path="/contact" element={<PageWrapper><Contact /></PageWrapper>} />
+              <Route path="/terms" element={<PageWrapper><Terms /></PageWrapper>} />
+              <Route path="/privacy" element={<PageWrapper><Privacy /></PageWrapper>} />
+              <Route path="/privacy-policy" element={<PageWrapper><Privacy /></PageWrapper>} />
               <Route path="/custom-order" element={<PageWrapper><CustomOrder /></PageWrapper>} />
               <Route path="/ai-recommendations" element={<PageWrapper><AIRecommendations /></PageWrapper>} />
               <Route path="/ai-room-designer" element={<PageWrapper><AIRoomDesigner /></PageWrapper>} />

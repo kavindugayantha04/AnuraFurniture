@@ -15,6 +15,8 @@ const generateSitemap = async () => {
     { url: '/custom-order', priority: '0.7', changefreq: 'monthly' },
     { url: '/about', priority: '0.6', changefreq: 'monthly' },
     { url: '/contact', priority: '0.6', changefreq: 'monthly' },
+    { url: '/terms', priority: '0.4', changefreq: 'yearly' },
+    { url: '/privacy', priority: '0.4', changefreq: 'yearly' },
   ];
 
   const productPages = products.map(p => ({
