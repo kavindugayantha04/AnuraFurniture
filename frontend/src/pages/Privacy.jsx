@@ -20,39 +20,35 @@ const sections = [
     body: 'If you sign in with Google, we receive your name, email, and profile picture from Google as permitted by your Google account settings. We store this to manage your account and link it to your orders.',
   },
   {
-    title: '5. Payment Processing',
-    body: 'Card payments are processed by Stripe (or other payment providers we enable). We do not store full card numbers on our servers. Payment providers handle your data under their own privacy policies.',
-  },
-  {
-    title: '6. Cookies',
+    title: '5. Cookies',
     body: 'We use cookies and similar technologies for authentication, shopping cart functionality, preferences (e.g. dark mode), and analytics. You can control cookies through your browser settings; some features may not work if cookies are disabled.',
   },
   {
-    title: '7. Data Sharing',
+    title: '6. Data Sharing',
     body: 'We may share data with: delivery partners (name, phone, address), email service providers (to send transactional emails), cloud hosting and image storage (e.g. Cloudinary), and AI service providers (e.g. Google Gemini) when you use AI features—only as needed to provide our services.',
   },
   {
-    title: '8. Data Retention',
+    title: '7. Data Retention',
     body: 'We retain account and order data for as long as needed to provide services, resolve disputes, and meet legal requirements. You may request deletion of your account by contacting us, subject to records we must keep for tax or legal purposes.',
   },
   {
-    title: '9. Security',
+    title: '8. Security',
     body: 'We use industry-standard measures including encrypted connections (HTTPS), secure password hashing, and access controls. No method of transmission over the internet is 100% secure; we cannot guarantee absolute security.',
   },
   {
-    title: '10. Your Rights',
+    title: '9. Your Rights',
     body: 'You may request access to, correction of, or deletion of your personal data where applicable under Sri Lankan law. Contact us using the details below. We will respond within a reasonable timeframe.',
   },
   {
-    title: '11. Children',
+    title: '10. Children',
     body: 'Our services are not directed at children under 16. We do not knowingly collect personal information from children.',
   },
   {
-    title: '12. Changes',
+    title: '11. Changes',
     body: 'We may update this Privacy Policy from time to time. The “Last updated” date below indicates the latest version.',
   },
   {
-    title: '13. Contact',
+    title: '12. Contact',
     body: 'Privacy questions: anurafurniture238@gmail.com, +94 72 330 3946, or our Contact page at Dekatana, Kadawatha.',
   },
 ];

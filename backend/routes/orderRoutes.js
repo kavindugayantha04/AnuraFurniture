@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
-  createOrder, getMyOrders, getOrder, createPaymentIntent,
-  updatePaymentStatus, getAllOrders, updateOrderStatus, getDashboardStats,
+  createOrder, getMyOrders, getOrder, getAllOrders, updateOrderStatus, getDashboardStats,
 } = require('../controllers/orderController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -11,8 +10,6 @@ router.get('/my-orders', protect, getMyOrders);
 router.get('/dashboard/stats', protect, authorize('admin'), getDashboardStats);
 router.get('/', protect, authorize('admin'), getAllOrders);
 router.get('/:id', protect, getOrder);
-router.post('/payment-intent', protect, createPaymentIntent);
-router.put('/:id/pay', protect, updatePaymentStatus);
 router.put('/:id/status', protect, authorize('admin'), updateOrderStatus);
 
 module.exports = router;

@@ -97,34 +97,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Stripe webhook (raw body needed)
-app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
-  const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-  const sig = req.headers['stripe-signature'];
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  } catch (err) {
-    return res.status(400).json({ error: `Webhook Error: ${err.message}` });
-  }
-
-  if (event.type === 'payment_intent.succeeded') {
-    const Order = require('./models/Order');
-    const paymentIntent = event.data.object;
-    const order = await Order.findById(paymentIntent.metadata.orderId);
-    if (order && !order.isPaid) {
-      order.isPaid = true;
-      order.paidAt = Date.now();
-      order.status = 'confirmed';
-      order.paymentResult = { id: paymentIntent.id, status: paymentIntent.status };
-      order.statusHistory.push({ status: 'confirmed', note: 'Payment confirmed via Stripe webhook' });
-      await order.save();
-    }
-  }
-
-  res.json({ received: true });
-});
-
 // Sitemap
 app.get('/sitemap.xml', async (req, res) => {
   try {

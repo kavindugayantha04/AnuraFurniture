@@ -43,8 +43,8 @@ export default function OrderSuccess() {
                 <span className="font-bold text-gray-900 dark:text-white">Rs. {order.totalPrice?.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500 dark:text-gray-400">Payment Method</span>
-                <span className="text-gray-700 dark:text-gray-300 capitalize">{order.paymentMethod?.replace('_', ' ')}</span>
+                <span className="text-gray-500 dark:text-gray-400">Payment</span>
+                <span className="text-gray-700 dark:text-gray-300">Cash on delivery</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500 dark:text-gray-400">Est. Delivery</span>

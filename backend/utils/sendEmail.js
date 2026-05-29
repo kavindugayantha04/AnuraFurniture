@@ -105,7 +105,7 @@ const emailTemplates = {
       <h2 style="color: #1e3a8a;">🛒 New order — ${order.orderNumber}</h2>
       <p><strong>Customer:</strong> ${user.name} (${user.email})</p>
       <p><strong>Phone:</strong> ${user.phone || '—'}</p>
-      <p><strong>Payment:</strong> ${order.paymentMethod}</p>
+      <p><strong>Payment:</strong> Cash on delivery</p>
       <p><strong>Total:</strong> Rs. ${order.totalPrice.toLocaleString()}</p>
       <p><strong>Items:</strong></p>
       <ul>${order.items.map((i) => `<li>${i.name} × ${i.quantity} — Rs. ${(i.price * i.quantity).toLocaleString()}</li>`).join('')}</ul>

@@ -14,7 +14,6 @@ A full-stack AI-powered MERN e-commerce platform for Sri Lanka's premium furnitu
 | Database | MongoDB + Mongoose |
 | Auth | JWT + Google OAuth 2.0 |
 | AI | Google Gemini (2.5 Flash) |
-| Payments | Stripe |
 | Storage | Cloudinary |
 | Real-time | Socket.io |
 | State | Redux Toolkit |
@@ -71,7 +70,6 @@ MONGO_URI=mongodb+srv://...
 JWT_SECRET=your_super_secret_key
 GEMINI_API_KEY=...
 CLOUDINARY_CLOUD_NAME=...
-STRIPE_SECRET_KEY=sk_test_...
 GOOGLE_CLIENT_ID=...
 ```
 
@@ -111,7 +109,7 @@ cd backend && npm start
 ### 🛒 E-Commerce
 - Product catalog with smart filtering & AI search
 - Shopping cart with coupon system
-- Stripe payment + COD + Koko Pay
+- Cash on delivery checkout
 - Order tracking with real-time updates
 - Invoice generation (PDF)
 - Wishlist & product comparison

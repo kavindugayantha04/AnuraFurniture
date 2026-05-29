@@ -1,5 +1,4 @@
 const asyncHandler = require('express-async-handler');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Cart = require('../models/Cart');
@@ -11,7 +10,7 @@ const { isAdminUser } = require('../config/admin');
 
 // @desc    Create order
 exports.createOrder = asyncHandler(async (req, res) => {
-  const { shippingAddress, paymentMethod, couponCode, notes } = req.body;
+  const { shippingAddress, couponCode, notes } = req.body;
 
   const cart = await Cart.findOne({ user: req.user.id }).populate('items.product');
   if (!cart || cart.items.length === 0) {
@@ -76,7 +75,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
     user: req.user.id,
     items: orderItems,
     shippingAddress,
-    paymentMethod,
+    paymentMethod: 'cod',
     subtotal,
     shippingPrice,
     taxPrice,
@@ -158,43 +157,6 @@ exports.getOrder = asyncHandler(async (req, res) => {
     res.status(403);
     throw new Error('Not authorized');
   }
-
-  res.status(200).json({ success: true, order });
-});
-
-// @desc    Create Stripe Payment Intent
-exports.createPaymentIntent = asyncHandler(async (req, res) => {
-  const { orderId } = req.body;
-  const order = await Order.findById(orderId);
-
-  if (!order || order.user.toString() !== req.user.id) {
-    res.status(404);
-    throw new Error('Order not found');
-  }
-
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(order.totalPrice * 100),
-    currency: 'lkr',
-    metadata: { orderId: order._id.toString(), orderNumber: order.orderNumber },
-  });
-
-  res.status(200).json({ success: true, clientSecret: paymentIntent.client_secret });
-});
-
-// @desc    Update payment status
-exports.updatePaymentStatus = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
-  if (!order) {
-    res.status(404);
-    throw new Error('Order not found');
-  }
-
-  order.isPaid = true;
-  order.paidAt = Date.now();
-  order.status = 'confirmed';
-  order.paymentResult = req.body.paymentResult;
-  order.statusHistory.push({ status: 'confirmed', note: 'Payment confirmed', updatedBy: req.user.id });
-  await order.save();
 
   res.status(200).json({ success: true, order });
 });

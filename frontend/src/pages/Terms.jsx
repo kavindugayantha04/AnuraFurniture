@@ -21,7 +21,7 @@ const sections = [
   },
   {
     title: '5. Payment',
-    body: 'We accept payment methods displayed at checkout (including card payments via Stripe where enabled, bank transfer, and cash on delivery where offered). You agree to pay the full amount including applicable taxes and delivery fees shown at checkout.',
+    body: 'Orders are paid by cash on delivery unless otherwise agreed in writing. You agree to pay the full amount shown at checkout when your furniture is delivered.',
   },
   {
     title: '6. Delivery & Installation',

@@ -34,7 +34,6 @@
     "pdfkit": "^0.14.0",
     "qrcode": "^1.5.3",
     "socket.io": "^4.6.2",
-    "stripe": "^14.9.0",
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {

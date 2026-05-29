@@ -348,11 +348,10 @@ export default function ProductDetail() {
                 ))}
               </div>
 
-              {/* Koko Payment */}
-              <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-100 dark:border-purple-800">
-                <p className="text-sm font-medium text-purple-700 dark:text-purple-300 mb-1">🎉 Koko – Buy Now, Pay Later</p>
-                <p className="text-xs text-purple-600 dark:text-purple-400">
-                  Pay Rs. {Math.round(finalPrice / 3).toLocaleString()} x 3 months • 0% interest
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800">
+                <p className="text-sm font-medium text-green-700 dark:text-green-300 mb-1">💵 Cash on delivery</p>
+                <p className="text-xs text-green-600 dark:text-green-400">
+                  Pay when your order arrives — no online payment required.
                 </p>
               </div>
             </div>

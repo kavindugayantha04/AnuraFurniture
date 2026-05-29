@@ -95,7 +95,7 @@ export default function OrderDetail() {
             <div className="card p-5">
               <h3 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2 text-sm"><CreditCard className="w-4 h-4 text-primary-600" /> Payment</h3>
               <div className="text-sm space-y-2">
-                <div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Method</span><span className="capitalize">{order.paymentMethod?.replace('_', ' ')}</span></div>
+                <div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Method</span><span>Cash on delivery</span></div>
                 <div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Status</span><span className={order.isPaid ? 'text-green-600' : 'text-orange-500'}>{order.isPaid ? 'Paid' : 'Unpaid'}</span></div>
                 <div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Subtotal</span><span>Rs. {order.subtotal?.toLocaleString()}</span></div>
                 <div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Delivery</span><span>{order.shippingPrice === 0 ? 'Free' : `Rs. ${order.shippingPrice}`}</span></div>
