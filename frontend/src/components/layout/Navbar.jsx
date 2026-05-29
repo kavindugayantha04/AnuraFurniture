@@ -21,6 +21,19 @@ const NAV_LINKS = [
   { path: '/contact', label: 'Contact', icon: Phone },
 ];
 
+// Routes whose top section is a dark hero band flush under the navbar.
+// Matches the exact path or any sub-path (e.g. '/shop' covers '/shop/living-room').
+// NOTE: '/' (Home) is excluded — its parallax hero leaves a light strip at the
+// very top where the navbar sits, so the navbar there should use light styling.
+const DARK_HERO_ROUTES = [
+  '/shop', '/about', '/contact', '/custom-order',
+  '/ai-recommendations', '/ai-room-designer',
+  '/terms', '/privacy', '/privacy-policy',
+];
+
+const isDarkHeroRoute = (pathname) =>
+  DARK_HERO_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+
 export default function Navbar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -33,6 +46,13 @@ export default function Navbar() {
   const cartCount = cart?.items?.reduce((s, i) => s + i.quantity, 0) || 0;
 
   const [scrolled, setScrolled] = useState(false);
+  // When transparent over a dark hero (or in dark mode), use light-on-dark styling
+  const onDark = darkMode || (!scrolled && isDarkHeroRoute(location.pathname));
+  const iconBtnClass = `p-2 rounded-xl transition-colors ${
+    onDark
+      ? 'text-white hover:bg-white/10'
+      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+  }`;
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [profileOpen, setProfileOpen] = useState(false);
@@ -79,10 +99,10 @@ export default function Navbar() {
           <div className="flex items-center h-[4.5rem] lg:h-20 gap-4">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 flex-shrink-0" aria-label="Anura Furniture – Dekatana home">
-              <BrandLogo autoTone size="lg" className="h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem] drop-shadow-sm" />
+              <BrandLogo forDarkBg={onDark} size="lg" className="h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem] drop-shadow-sm" />
               <div className="hidden sm:block">
-                <p className="font-display font-bold text-gray-900 dark:text-white text-sm leading-tight">Anura Furniture</p>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight tracking-widest uppercase">Dekatana</p>
+                <p className={`font-display font-bold text-sm leading-tight ${onDark ? 'text-white' : 'text-gray-900 dark:text-white'}`}>Anura Furniture</p>
+                <p className={`text-[10px] leading-tight tracking-widest uppercase ${onDark ? 'text-blue-200' : 'text-gray-500 dark:text-gray-400'}`}>Dekatana</p>
               </div>
             </Link>
 
@@ -94,8 +114,8 @@ export default function Navbar() {
                     location.pathname === path
                       ? 'bg-primary-800 text-white'
                       : highlight
-                        ? 'text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        ? (onDark ? 'text-cyan-300 hover:bg-white/10' : 'text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20')
+                        : (onDark ? 'text-white/90 hover:bg-white/10' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800')
                   }`}
                 >
                   {label}
@@ -107,25 +127,25 @@ export default function Navbar() {
             <div className="flex items-center gap-1 ml-auto">
               {/* Search */}
               <button onClick={() => { setSearchOpen(true); setTimeout(() => searchRef.current?.focus(), 50); }}
-                className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                className={iconBtnClass}>
                 <Search className="w-5 h-5" />
               </button>
 
               {/* Dark Mode */}
               <button onClick={() => dispatch(toggleDarkMode())}
-                className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                className={iconBtnClass}>
                 {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
 
               {isAuthenticated && (
                 <>
                   {/* Wishlist */}
-                  <Link to="/wishlist" className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                  <Link to="/wishlist" className={iconBtnClass}>
                     <Heart className="w-5 h-5" />
                   </Link>
 
                   {/* Notifications */}
-                  <Link to="/notifications" className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative">
+                  <Link to="/notifications" className={`${iconBtnClass} relative`}>
                     <Bell className="w-5 h-5" />
                     {unreadCount > 0 && <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>}
                   </Link>
@@ -134,7 +154,7 @@ export default function Navbar() {
 
               {/* Cart */}
               <button onClick={() => dispatch(openCart())}
-                className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative">
+                className={`${iconBtnClass} relative`}>
                 <ShoppingCart className="w-5 h-5" />
                 {cartCount > 0 && <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-primary-800 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{cartCount > 9 ? '9+' : cartCount}</span>}
               </button>
@@ -183,7 +203,7 @@ export default function Navbar() {
               )}
 
               {/* Mobile Menu Toggle */}
-              <button onClick={() => dispatch(toggleMobileMenu())} className="lg:hidden p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+              <button onClick={() => dispatch(toggleMobileMenu())} className={`lg:hidden ${iconBtnClass}`}>
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
             </div>
