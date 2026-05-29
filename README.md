@@ -13,7 +13,7 @@ A full-stack AI-powered MERN e-commerce platform for Sri Lanka's premium furnitu
 | Backend | Node.js, Express.js |
 | Database | MongoDB + Mongoose |
 | Auth | JWT + Google OAuth 2.0 |
-| AI | OpenAI GPT-4o |
+| AI | Google Gemini (2.5 Flash) |
 | Payments | Stripe |
 | Storage | Cloudinary |
 | Real-time | Socket.io |
@@ -69,11 +69,23 @@ Copy `backend/.env.example` to `backend/.env` and fill in:
 ```env
 MONGO_URI=mongodb+srv://...
 JWT_SECRET=your_super_secret_key
-OPENAI_API_KEY=sk-...
+GEMINI_API_KEY=...
 CLOUDINARY_CLOUD_NAME=...
 STRIPE_SECRET_KEY=sk_test_...
 GOOGLE_CLIENT_ID=...
 ```
+
+Add admin credentials **only** in `backend/.env` (not in `.env.example`):
+
+```env
+ADMIN_EMAIL=...
+ADMIN_PASSWORD=...
+ADMIN_NAME=...
+```
+
+Then run once: `cd backend && npm run seed:admin`
+
+Optional sample catalog: `npm run seed`
 
 ### 3. Run Development
 
@@ -105,7 +117,7 @@ cd backend && npm start
 - Wishlist & product comparison
 
 ### 🤖 AI Features
-- **AI Chatbot** – Furniture assistant powered by GPT-4o
+- **AI Chatbot** – Furniture assistant powered by Google Gemini
 - **AI Recommendations** – Personalized product suggestions
 - **AI Room Designer** – Upload room, get design suggestions
 - **Natural Language Search** – "modern sofa under Rs.80,000"
@@ -135,11 +147,24 @@ cd backend && npm start
 
 ---
 
-## 🔑 Default Admin
+## 🔑 Admin account
 
-After seeding, login with:
-- Email: `admin@anurafurniture.lk`
-- Password: `Admin@123`
+Admin access is **not hardcoded**. Set these only in `backend/.env` (never commit this file, never add values to `.env.example`):
+
+```env
+ADMIN_EMAIL=your_admin@gmail.com
+ADMIN_PASSWORD=YourStrongPassword12+
+ADMIN_NAME=Site Administrator
+```
+
+Only the email in `ADMIN_EMAIL` can use the admin panel (enforced on the server). Then run:
+
+```bash
+cd backend
+npm run seed:admin
+```
+
+Log in at `/login` with that email and password.
 
 ---
 
