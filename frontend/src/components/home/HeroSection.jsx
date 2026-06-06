@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Sparkles, Play, Star } from 'lucide-react';
+import { getCurrentYear } from '../../utils/dates';
 
-const slides = [
+const getSlides = (year) => [
   {
     id: 1,
     badge: '✨ AI-Powered Recommendations',
@@ -19,7 +20,7 @@ const slides = [
   },
   {
     id: 2,
-    badge: '🆕 New Arrivals 2024',
+    badge: `🆕 New Arrivals ${year}`,
     title: 'Transform Your',
     titleHighlight: 'Living Space',
     titleEnd: 'Today',
@@ -54,6 +55,7 @@ const showcaseImages = [
 export default function HeroSection() {
   const [current, setCurrent] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
+  const slides = useMemo(() => getSlides(getCurrentYear()), []);
 
   useEffect(() => {
     if (!isPlaying) return;
@@ -61,7 +63,7 @@ export default function HeroSection() {
       setCurrent((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [isPlaying]);
+  }, [isPlaying, slides.length]);
 
   const slide = slides[current];
 

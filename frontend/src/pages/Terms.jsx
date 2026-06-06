@@ -1,6 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { FileText, ArrowLeft } from 'lucide-react';
+import { formatLongDate, POLICY_LAST_UPDATED } from '../utils/dates';
 
 const sections = [
   {
@@ -83,7 +84,7 @@ export default function Terms() {
               <FileText className="w-8 h-8 text-cyan-300" />
               <h1 className="font-display text-4xl font-bold">Terms of Service</h1>
             </div>
-            <p className="text-blue-200">Last updated: May 29, 2026</p>
+            <p className="text-blue-200">Last updated: {formatLongDate(POLICY_LAST_UPDATED)}</p>
           </div>
         </div>
 

@@ -1,12 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-
-const stats = [
-  { value: 15000, suffix: '+', label: 'Happy Customers', emoji: '😊' },
-  { value: 500, suffix: '+', label: 'Products Available', emoji: '🪑' },
-  { value: 14, suffix: ' Years', label: 'Of Excellence', emoji: '🏆' },
-  { value: 99, suffix: '%', label: 'Satisfaction Rate', emoji: '⭐' },
-];
+import { getYearsInBusiness } from '../../utils/dates';
 
 function AnimatedNumber({ value, suffix, isVisible }) {
   const [count, setCount] = useState(0);
@@ -31,6 +25,12 @@ function AnimatedNumber({ value, suffix, isVisible }) {
 export default function StatsSection() {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef(null);
+  const stats = useMemo(() => [
+    { value: 15000, suffix: '+', label: 'Happy Customers', emoji: '😊' },
+    { value: 500, suffix: '+', label: 'Products Available', emoji: '🪑' },
+    { value: getYearsInBusiness(), suffix: ' Years', label: 'Of Excellence', emoji: '🏆' },
+    { value: 99, suffix: '%', label: 'Satisfaction Rate', emoji: '⭐' },
+  ], []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(

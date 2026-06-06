@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
 import { fetchProducts, fetchCategories } from "../store/slices/productSlice";
 import { Helmet } from "react-helmet-async";
+import { getYearsInBusiness } from "../utils/dates";
 
 const CATEGORY_FALLBACK = [
   { name: "Living Room", slug: "living-room", count: "Shop now", img: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=90&w=900&auto=format&fit=crop" },
@@ -19,7 +20,15 @@ const TESTIMONIALS = [
   { name: "Amal Fernando", city: "Galle", initials: "AF", bg: "#F0FDF4", text: "Used the AI Room Designer before buying — it showed exactly how the sofa would look. Game changing.", stars: 5 },
 ];
 
-const MARQUEE = ["✦ Handcrafted in Sri Lanka", "✦ Free Island-wide Delivery", "✦ 5 Year Warranty", "✦ AI Room Designer", "✦ Custom Furniture Orders", "✦ Premium Solid Wood", "✦ 15 Years of Excellence", "✦ 5,000+ Happy Homes"];
+const MARQUEE_BASE = ["✦ Handcrafted in Sri Lanka", "✦ Free Island-wide Delivery", "✦ 5 Year Warranty", "✦ AI Room Designer", "✦ Custom Furniture Orders", "✦ Premium Solid Wood", "✦ 5,000+ Happy Homes"];
+
+function getMarqueeItems() {
+  return [
+    ...MARQUEE_BASE.slice(0, 6),
+    `✦ ${getYearsInBusiness()} Years of Excellence`,
+    MARQUEE_BASE[6],
+  ];
+}
 
 function Stars({ n = 5, size = 13 }) {
   return (
@@ -143,6 +152,9 @@ export default function Home() {
     const rest = products.filter((p) => !p.isFeatured);
     return [...featured, ...rest].slice(0, 4);
   }, [products]);
+
+  const yearsInBusiness = getYearsInBusiness();
+  const marqueeItems = useMemo(() => getMarqueeItems(), [yearsInBusiness]);
 
   const displayCategories = useMemo(() => {
     if (categories?.length > 0) {
@@ -471,7 +483,7 @@ export default function Home() {
       {/* ══ MARQUEE ═════════════════════════════════════════════ */}
       <div style={{ background: "linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #1e3a8a 100%)", padding: "15px 0", overflow: "hidden" }}>
         <div style={{ display: "flex", gap: 48, whiteSpace: "nowrap", animation: "marquee 26s linear infinite" }}>
-          {[...MARQUEE, ...MARQUEE].map((t, i) => (
+          {[...marqueeItems, ...marqueeItems].map((t, i) => (
             <span key={i} style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, fontWeight: 500, letterSpacing: ".06em", flexShrink: 0 }}>{t}</span>
           ))}
         </div>
@@ -614,7 +626,7 @@ export default function Home() {
       {/* ══ STATS ════════════════════════════════════════════════ */}
       <section style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #0891b2 100%)", padding: "72px 48px" }}>
         <div style={{ maxWidth: 1320, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
-          {[["5,000+", "Happy families across Sri Lanka", "🏠"], ["500+", "Premium products available", "🛋️"], ["15+", "Years of craftsmanship", "🏆"], ["99%", "Customer satisfaction rate", "⭐"]].map(([v, l, icon], i) => (
+          {[["5,000+", "Happy families across Sri Lanka", "🏠"], ["500+", "Premium products available", "🛋️"], [`${yearsInBusiness}+`, "Years of craftsmanship", "🏆"], ["99%", "Customer satisfaction rate", "⭐"]].map(([v, l, icon], i) => (
             <motion.div key={l} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
               style={{ textAlign: "center", padding: "20px 32px", borderRight: i < 3 ? "1px solid rgba(255,255,255,0.08)" : "none" }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>{icon}</div>
