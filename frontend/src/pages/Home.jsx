@@ -2,16 +2,15 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
-import { fetchProducts } from "../store/slices/productSlice";
+import { fetchProducts, fetchCategories } from "../store/slices/productSlice";
+import { Helmet } from "react-helmet-async";
 
-const slugify = (s) => s.toLowerCase().replace(/\s+/g, "-");
-
-const CATEGORIES = [
-  { name: "Living Room", count: "147 pieces", img: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=90&w=900&auto=format&fit=crop" },
-  { name: "Bedroom", count: "89 pieces", img: "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?q=90&w=900&auto=format&fit=crop" },
-  { name: "Dining", count: "63 pieces", img: "https://images.unsplash.com/photo-1617806118233-18e1de247200?q=90&w=900&auto=format&fit=crop" },
-  { name: "Office", count: "52 pieces", img: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=90&w=900&auto=format&fit=crop" },
-  { name: "Outdoor", count: "38 pieces", img: "https://images.unsplash.com/photo-1600210492493-0946911123ea?q=90&w=900&auto=format&fit=crop" },
+const CATEGORY_FALLBACK = [
+  { name: "Living Room", slug: "living-room", count: "Shop now", img: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=90&w=900&auto=format&fit=crop" },
+  { name: "Bedroom", slug: "bedroom", count: "Shop now", img: "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?q=90&w=900&auto=format&fit=crop" },
+  { name: "Dining", slug: "dining-room", count: "Shop now", img: "https://images.unsplash.com/photo-1617806118233-18e1de247200?q=90&w=900&auto=format&fit=crop" },
+  { name: "Office", slug: "office", count: "Shop now", img: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=90&w=900&auto=format&fit=crop" },
+  { name: "Outdoor", slug: "outdoor", count: "Shop now", img: "https://images.unsplash.com/photo-1600210492493-0946911123ea?q=90&w=900&auto=format&fit=crop" },
 ];
 
 const TESTIMONIALS = [
@@ -131,10 +130,11 @@ function FeaturedProductSkeleton() {
 export default function Home() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { products, loading } = useSelector((s) => s.products);
+  const { products, categories, loading } = useSelector((s) => s.products);
 
   useEffect(() => {
     dispatch(fetchProducts({ limit: 16 }));
+    dispatch(fetchCategories());
   }, [dispatch]);
 
   const featuredProducts = useMemo(() => {
@@ -143,6 +143,18 @@ export default function Home() {
     const rest = products.filter((p) => !p.isFeatured);
     return [...featured, ...rest].slice(0, 4);
   }, [products]);
+
+  const displayCategories = useMemo(() => {
+    if (categories?.length > 0) {
+      return categories.slice(0, 5).map((c, i) => ({
+        name: c.name,
+        slug: c.slug,
+        count: `${products?.filter((p) => p.category?.slug === c.slug || p.category?._id === c._id).length || 0} pieces`,
+        img: c.image?.url || CATEGORY_FALLBACK[i]?.img,
+      }));
+    }
+    return CATEGORY_FALLBACK;
+  }, [categories, products]);
 
   const heroProduct = featuredProducts[0] || products?.[0];
   const heroProductImg = heroProduct?.images?.find((i) => i.isPrimary)?.url
@@ -169,6 +181,10 @@ export default function Home() {
 
   return (
     <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", background: "#fff", color: "#111", overflowX: "hidden" }}>
+      <Helmet>
+        <title>Anura Furniture – Dekatana | Furniture කලාවේ මහ ගෙදර</title>
+        <meta name="description" content="Shop premium furniture at Anura Furniture Dekatana. Sofas, beds, dining sets & custom orders with free island-wide delivery across Sri Lanka." />
+      </Helmet>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@600;700;800;900&family=Abhaya+Libre:wght@400;500;600;700;800&family=Noto+Sans+Sinhala:wght@500;600;700;800&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -251,7 +267,7 @@ export default function Home() {
               <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
                 style={{ display: "inline-flex", alignItems: "center", gap: 8, border: "1px solid #BFDBFE", borderRadius: 30, padding: "7px 16px", fontSize: 12, color: "#1e3a8a", fontWeight: 600, marginBottom: 32, background: "#EFF6FF" }}>
                 <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22C55E", display: "inline-block", position: "relative" }} className="pulse-ring" />
-                Free island-wide delivery · Sri Lanka
+                ✨ Premium Furniture Shop · Dekatana
               </motion.div>
 
               <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.7 }}
@@ -345,14 +361,8 @@ export default function Home() {
                     border: "3px solid rgba(255,255,255,0.85)",
                   }}
                 >
-                  <img src={heroProductImg} alt={heroProduct?.name || "Premium living room"} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 50%, rgba(15,23,42,0.45) 100%)" }} />
-                  <div style={{ position: "absolute", bottom: 24, left: 24, right: 24 }}>
-                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontWeight: 700, color: "#fff", marginBottom: 4, textShadow: "0 2px 12px rgba(0,0,0,0.3)" }}>
-                      {heroProduct?.category?.name || "Living Room"} Collection
-                    </p>
-                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)" }}>Premium furniture · Handcrafted in Sri Lanka</p>
-                  </div>
+                  <img src={heroProductImg} alt={heroProduct?.name || "Anura Furniture showroom"} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, transparent 85%, rgba(15,23,42,0.08) 100%)" }} />
                 </motion.div>
 
                 {/* Rating card — top left, prominent */}
@@ -483,7 +493,7 @@ export default function Home() {
         </motion.div>
 
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gridTemplateRows: "280px 280px", gap: 14 }}>
-          {CATEGORIES.map((cat, i) => {
+          {displayCategories.map((cat, i) => {
             const spans = [
               { gridColumn: "1", gridRow: "1 / 3" },
               { gridColumn: "2", gridRow: "1" },
@@ -492,8 +502,8 @@ export default function Home() {
               { gridColumn: "3", gridRow: "2" },
             ];
             return (
-              <motion.div key={cat.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.07 }}
-                onClick={() => navigate(`/shop/${slugify(cat.name)}`)}
+              <motion.div key={cat.slug || cat.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.07 }}
+                onClick={() => navigate(`/shop/${cat.slug}`)}
                 className="cat-card"
                 style={{ ...spans[i], position: "relative", borderRadius: 20, overflow: "hidden", cursor: "pointer" }}>
                 <img src={cat.img} alt={cat.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .6s" }}

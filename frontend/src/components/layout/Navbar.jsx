@@ -87,12 +87,23 @@ export default function Navbar() {
     navigate('/');
   };
 
+  const isActiveNav = (path) =>
+    path === '/'
+      ? location.pathname === '/'
+      : location.pathname === path || location.pathname.startsWith(`${path}/`);
+
   return (
     <>
       <motion.nav
         initial={{ y: -80 }}
         animate={{ y: 0 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass shadow-glass border-b border-white/10' : 'bg-transparent'}`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? 'glass shadow-glass border-b border-white/10 bg-white/90 dark:bg-dark-bg/90 backdrop-blur-xl'
+            : onDark
+              ? 'bg-primary-950/30 backdrop-blur-md border-b border-white/10'
+              : 'bg-transparent'
+        }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-[4.5rem] lg:h-20 gap-4">
@@ -107,11 +118,15 @@ export default function Navbar() {
 
             {/* Desktop Nav */}
             <div className="hidden lg:flex items-center gap-1 flex-1 justify-center">
-              {NAV_LINKS.map(({ path, label, highlight }) => (
+              {NAV_LINKS.map(({ path, label, highlight }) => {
+                const active = isActiveNav(path);
+                return (
                 <Link key={path} to={path}
-                  className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                    location.pathname === path
-                      ? 'bg-primary-800 text-white'
+                  className={`px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
+                    active
+                      ? onDark
+                        ? 'bg-white/20 text-white shadow-sm ring-1 ring-white/25'
+                        : 'bg-primary-800 text-white shadow-sm'
                       : highlight
                         ? (onDark ? 'text-cyan-300 hover:bg-white/10' : 'text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20')
                         : (onDark ? 'text-white/90 hover:bg-white/10' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800')
@@ -119,7 +134,7 @@ export default function Navbar() {
                 >
                   {label}
                 </Link>
-              ))}
+              );})}
             </div>
 
             {/* Actions */}
@@ -196,7 +211,11 @@ export default function Navbar() {
                   </AnimatePresence>
                 </div>
               ) : (
-                <Link to="/login" className="ml-1 px-4 py-2 bg-primary-800 text-white text-sm font-medium rounded-xl hover:bg-primary-700 transition-colors shadow-glow">
+                <Link to="/login" className={`ml-1 px-4 py-2 text-sm font-medium rounded-xl transition-colors shadow-glow ${
+                  onDark && !scrolled
+                    ? 'bg-white text-primary-900 hover:bg-blue-50'
+                    : 'bg-primary-800 text-white hover:bg-primary-700'
+                }`}>
                   Sign In
                 </Link>
               )}
@@ -219,7 +238,7 @@ export default function Navbar() {
                   <Link key={path} to={path}
                     onClick={() => dispatch(toggleMobileMenu())}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                      location.pathname === path ? 'bg-primary-800 text-white' :
+                      isActiveNav(path) ? 'bg-primary-800 text-white' :
                       highlight ? 'text-cyan-600 dark:text-cyan-400' : 'text-gray-700 dark:text-gray-300'
                     }`}
                   >

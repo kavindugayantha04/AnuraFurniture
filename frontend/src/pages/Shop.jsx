@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useParams } from 'react-router-dom';
+import { useSearchParams, useParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
@@ -122,24 +122,35 @@ export default function Shop() {
       </Helmet>
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900/30">
-        {/* Hero Bar */}
-        <div className="bg-gradient-to-r from-primary-900 to-primary-800 text-white py-10 px-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center gap-2 text-sm text-blue-200 mb-3">
-              <span>Home</span>
-              <ChevronRight className="w-3 h-3" />
-              <span>Shop</span>
+        {/* Hero Bar — pt clears fixed navbar */}
+        <div className="bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 text-white pt-24 lg:pt-28 pb-10 px-4 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.07] pointer-events-none"
+            style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }}
+          />
+          <div className="max-w-7xl mx-auto relative z-10">
+            <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-blue-200/90 mb-4">
+              <Link to="/" className="hover:text-white transition-colors">Home</Link>
+              <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+              <Link to="/shop" className={categorySlug ? 'hover:text-white transition-colors' : 'text-white font-medium'}>
+                Shop
+              </Link>
               {categorySlug && (
                 <>
-                  <ChevronRight className="w-3 h-3" />
-                  <span className="capitalize">{categorySlug.replace(/-/g, ' ')}</span>
+                  <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                  <span className="text-white font-medium capitalize">
+                    {categorySlug.replace(/-/g, ' ')}
+                  </span>
                 </>
               )}
-            </div>
-            <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">
-              {categorySlug ? categorySlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Our Collection'}
+            </nav>
+            <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-2">
+              {categorySlug
+                ? categorySlug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+                : 'Our Collection'}
             </h1>
-            <p className="text-blue-200">{total} premium pieces available</p>
+            <p className="text-blue-200/90 text-sm md:text-base">
+              {loading ? 'Loading furniture…' : `${total} premium piece${total === 1 ? '' : 's'} available`}
+            </p>
 
             {/* AI Search */}
             <form onSubmit={handleAISearch} className="mt-6 flex gap-3 max-w-2xl">
