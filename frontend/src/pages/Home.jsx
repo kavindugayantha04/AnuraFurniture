@@ -1,461 +1,647 @@
-import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Helmet } from 'react-helmet-async';
-import {
-  Sparkles, ArrowRight, Star, ChevronRight, Wand2,
-  ShieldCheck, Truck, Phone, Award, Boxes, MoveRight,
-} from 'lucide-react';
-import { fetchProducts, fetchCategories } from '../store/slices/productSlice';
-import ProductCard from '../components/product/ProductCard';
+import { useState, useRef, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
+import { fetchProducts } from "../store/slices/productSlice";
 
-const HERO_FEATURES = [
-  { icon: ShieldCheck, text: '5 Year Warranty' },
-  { icon: Truck, text: 'Free Delivery' },
-  { icon: Award, text: 'Premium Quality' },
-  { icon: Phone, text: '24/7 Support' },
-];
+const slugify = (s) => s.toLowerCase().replace(/\s+/g, "-");
 
-const MARQUEE_ITEMS = [
-  '✦ Handcrafted in Sri Lanka',
-  '✦ Free Island-wide Delivery',
-  '✦ 5 Year Warranty',
-  '✦ AI Room Designer',
-  '✦ Custom Furniture Orders',
-  '✦ Premium Solid Wood',
-];
-
-const CATEGORY_FALLBACK = [
-  { _id: '1', name: 'Living Room', slug: 'living-room', img: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=800' },
-  { _id: '2', name: 'Bedroom', slug: 'bedroom', img: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=800' },
-  { _id: '3', name: 'Dining Room', slug: 'dining-room', img: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?q=80&w=800' },
-  { _id: '4', name: 'Office', slug: 'office', img: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=800' },
-  { _id: '5', name: 'Outdoor', slug: 'outdoor', img: 'https://images.unsplash.com/photo-1600210492493-0946911123ea?q=80&w=800' },
-  { _id: '6', name: 'Kids Room', slug: 'kids-room', img: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800' },
-];
-
-const SHOWCASE_TAGS = [
-  { label: 'Velvet Sofa', price: 'Rs. 145,000', pos: 'top-[12%] left-[6%]' },
-  { label: 'Oak Coffee Table', price: 'Rs. 38,500', pos: 'bottom-[26%] left-[10%]' },
-  { label: 'Floor Lamp', price: 'Rs. 12,900', pos: 'top-[22%] right-[8%]' },
+const CATEGORIES = [
+  { name: "Living Room", count: "147 pieces", img: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=90&w=900&auto=format&fit=crop" },
+  { name: "Bedroom", count: "89 pieces", img: "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?q=90&w=900&auto=format&fit=crop" },
+  { name: "Dining", count: "63 pieces", img: "https://images.unsplash.com/photo-1617806118233-18e1de247200?q=90&w=900&auto=format&fit=crop" },
+  { name: "Office", count: "52 pieces", img: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=90&w=900&auto=format&fit=crop" },
+  { name: "Outdoor", count: "38 pieces", img: "https://images.unsplash.com/photo-1600210492493-0946911123ea?q=90&w=900&auto=format&fit=crop" },
 ];
 
 const TESTIMONIALS = [
-  { name: 'Kavindu Perera', location: 'Colombo', rating: 5, text: 'Absolutely stunning furniture! The quality exceeded my expectations. My living room looks like a magazine shoot now.' },
-  { name: 'Nadeesha Silva', location: 'Kandy', rating: 5, text: 'Best furniture store in Sri Lanka. The custom order process was seamless and the delivery was on time.' },
-  { name: 'Amal Fernando', location: 'Galle', rating: 5, text: 'The AI room designer helped me visualize exactly what I wanted. Amazing experience from start to finish!' },
+  { name: "Kavindu Perera", city: "Colombo", initials: "KP", bg: "#EEF2FF", text: "The craftsmanship is extraordinary. My living room looks like a magazine spread — absolutely stunning.", stars: 5 },
+  { name: "Nadeesha Silva", city: "Kandy", initials: "NS", bg: "#FFF7ED", text: "Seamless custom order process. Delivered 3 days ahead of schedule. The quality exceeded every expectation.", stars: 5 },
+  { name: "Amal Fernando", city: "Galle", initials: "AF", bg: "#F0FDF4", text: "Used the AI Room Designer before buying — it showed exactly how the sofa would look. Game changing.", stars: 5 },
 ];
 
-function HeroImageStack() {
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const rotateY = useSpring(useTransform(mx, [-0.5, 0.5], [9, -9]), { stiffness: 120, damping: 18 });
-  const rotateX = useSpring(useTransform(my, [-0.5, 0.5], [-8, 8]), { stiffness: 120, damping: 18 });
+const MARQUEE = ["✦ Handcrafted in Sri Lanka", "✦ Free Island-wide Delivery", "✦ 5 Year Warranty", "✦ AI Room Designer", "✦ Custom Furniture Orders", "✦ Premium Solid Wood", "✦ 15 Years of Excellence", "✦ 5,000+ Happy Homes"];
 
-  const handleMove = (e) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    mx.set((e.clientX - r.left) / r.width - 0.5);
-    my.set((e.clientY - r.top) / r.height - 0.5);
-  };
-  const handleLeave = () => { mx.set(0); my.set(0); };
+function Stars({ n = 5, size = 13 }) {
+  return (
+    <span style={{ display: "flex", gap: 2 }}>
+      {Array.from({ length: n }).map((_, i) => (
+        <svg key={i} width={size} height={size} viewBox="0 0 12 12" fill="#F59E0B">
+          <path d="M6 1l1.4 2.8 3.1.45-2.25 2.2.53 3.1L6 8.1 3.22 9.55l.53-3.1L1.5 4.25l3.1-.45z" />
+        </svg>
+      ))}
+    </span>
+  );
+}
+
+function getProductBadge(product) {
+  if (product.isBestSeller) return { label: "Bestseller", color: "#2563eb" };
+  if (product.isNewArrival) return { label: "New In", color: "#2D6A4F" };
+  if (product.discount > 0 || product.isOnSale) return { label: "Sale", color: "#C0392B" };
+  if (product.isTrending) return { label: "Trending", color: "#6C3483" };
+  if (product.isFeatured) return { label: "Featured", color: "#2563eb" };
+  return null;
+}
+
+function formatRs(amount) {
+  return `Rs. ${Math.round(amount).toLocaleString()}`;
+}
+
+function FeaturedProductCard({ product, i }) {
+  const navigate = useNavigate();
+  const [hovered, setHovered] = useState(false);
+  const badge = getProductBadge(product);
+  const finalPrice = product.discount > 0
+    ? product.price - (product.price * product.discount) / 100
+    : product.price;
+  const originalPrice = product.discount > 0
+    ? product.price
+    : (product.originalPrice > product.price ? product.originalPrice : null);
+  const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
+  const subtitle = product.materials?.length
+    ? product.materials.slice(0, 2).join(" + ")
+    : (product.category?.name || "Premium Furniture");
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.94, y: 30 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.8, delay: 0.2 }}
-      onMouseMove={handleMove}
-      onMouseLeave={handleLeave}
-      className="relative w-full max-w-md mx-auto h-[24rem] sm:h-[28rem] lg:h-[30rem] [perspective:1600px]"
+      initial={{ opacity: 0, y: 32 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: i * 0.09, duration: 0.5 }}
+      onClick={() => navigate(`/product/${product.slug || product._id}`)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ background: "#fff", borderRadius: 20, overflow: "hidden", border: "1px solid #EBEBEB", cursor: "pointer", transition: "transform .3s, box-shadow .3s", transform: hovered ? "translateY(-8px)" : "translateY(0)", boxShadow: hovered ? "0 24px 64px rgba(0,0,0,0.10)" : "0 2px 20px rgba(0,0,0,0.05)" }}
     >
-      {/* Decorative offset color panel + glow behind the image */}
-      <div className="absolute right-0 bottom-3 w-[78%] h-[80%] rounded-[2.5rem] bg-gradient-to-br from-primary-600 to-cyan-500 shadow-2xl shadow-primary-600/30" />
-      <div className="absolute -left-6 -top-6 w-32 h-32 bg-dots text-primary-400/30 rounded-full" />
-      <div className="absolute -right-3 top-2 w-20 h-20 rounded-full border-[5px] border-gold-300/50" />
-
-      <motion.div style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }} className="relative w-full h-full">
-        {/* Main image with asymmetric, creative frame */}
-        <motion.div
-          whileHover={{ scale: 1.01 }}
-          style={{ transform: 'translateZ(45px)' }}
-          className="group absolute left-0 top-0 w-[82%] h-[86%] rounded-[2rem] rounded-br-[4.5rem] overflow-hidden shadow-2xl ring-1 ring-black/5 dark:ring-white/10 bg-white"
-        >
-          <img
-            src="https://images.unsplash.com/photo-1615874959474-d609969a20ed?q=80&w=1000&auto=format&fit=crop"
-            alt="Elegant modern living room with premium furniture"
-            className="w-full h-full object-cover transition-transform duration-[1200ms] group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-primary-950/35 via-transparent to-transparent" />
-        </motion.div>
-
-        {/* Floating product price chip (bottom-left of image) */}
-        <motion.div
-          animate={{ y: [0, -10, 0] }}
-          transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
-          style={{ transform: 'translateZ(95px)' }}
-          className="absolute -left-3 bottom-12 flex items-center gap-3 p-2 pr-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/10 shadow-2xl"
-        >
-          <div className="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0">
-            <img src="https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?q=80&w=200&auto=format&fit=crop" alt="Accent chair" className="w-full h-full object-cover" />
-          </div>
-          <div>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-none mb-1">Best Seller</p>
-            <p className="text-xs font-bold text-gray-900 dark:text-white leading-none">Velvet Accent Chair</p>
-            <p className="text-[11px] font-semibold text-primary-700 dark:text-cyan-300 mt-1">Rs. 24,900</p>
-          </div>
-        </motion.div>
-
-        {/* Floating rating card (bottom-right, over the color panel) */}
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut', delay: 0.8 }}
-          style={{ transform: 'translateZ(110px)' }}
-          className="absolute right-2 bottom-6 px-4 py-3 rounded-2xl bg-white/95 dark:bg-gray-900/90 backdrop-blur-xl border border-white/60 dark:border-white/10 shadow-2xl"
-        >
-          <div className="flex items-center gap-1 mb-1">
-            {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="w-3.5 h-3.5 text-gold-400 fill-gold-400" />)}
-          </div>
-          <p className="text-gray-900 dark:text-white text-sm font-extrabold leading-none">4.9 / 5.0</p>
-          <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">5,000+ happy homes</p>
-        </motion.div>
-
-        {/* Floating free-delivery pill (top-right) */}
-        <motion.div
-          animate={{ y: [0, -8, 0] }}
-          transition={{ repeat: Infinity, duration: 4.5, ease: 'easeInOut', delay: 0.4 }}
-          style={{ transform: 'translateZ(120px)' }}
-          className="absolute right-3 top-4 flex items-center gap-2 px-3 py-2 rounded-full bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-2xl ring-1 ring-black/5 dark:ring-white/10"
-        >
-          <span className="grid place-items-center w-6 h-6 rounded-full bg-gradient-to-br from-primary-600 to-cyan-500 text-white">
-            <Truck className="w-3.5 h-3.5" />
+      <div style={{ position: "relative", overflow: "hidden", background: "#F8F7F5", paddingTop: "100%" }}>
+        <motion.img
+          src={primaryImage?.url || "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=700"}
+          alt={primaryImage?.alt || product.name}
+          animate={{ scale: hovered ? 1.07 : 1 }}
+          transition={{ duration: 0.6 }}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+        />
+        {badge && (
+          <span style={{ position: "absolute", top: 14, left: 14, background: badge.color, color: "#fff", fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 30, letterSpacing: ".04em" }}>
+            {badge.label}
           </span>
-          <span className="text-[11px] font-bold pr-1">Free Delivery</span>
-        </motion.div>
-      </motion.div>
+        )}
+        <AnimatePresence>
+          {hovered && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }} transition={{ duration: 0.2 }}
+              style={{ position: "absolute", bottom: 12, left: 12, right: 12, background: "linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)", color: "#fff", borderRadius: 12, padding: "11px", textAlign: "center", fontSize: 13, fontWeight: 600, letterSpacing: ".03em", boxShadow: "0 8px 22px rgba(37,99,235,0.35)" }}>
+              View Product
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      <div style={{ padding: "16px 18px 20px" }}>
+        <p style={{ fontSize: 11, color: "#AAA", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 5, fontWeight: 500 }}>{subtitle}</p>
+        <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, fontSize: 17, color: "#111", marginBottom: 8, lineHeight: 1.25 }}>{product.name}</p>
+        {product.numReviews > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+            <Stars n={Math.round(product.ratings) || 5} size={12} />
+            <span style={{ fontSize: 11, color: "#AAA" }}>{product.ratings?.toFixed(1)} · {product.numReviews} reviews</span>
+          </div>
+        )}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span style={{ fontWeight: 700, fontSize: 17, color: "#111" }}>{formatRs(finalPrice)}</span>
+            {originalPrice && <span style={{ fontSize: 12, color: "#CCC", textDecoration: "line-through" }}>{formatRs(originalPrice)}</span>}
+          </div>
+        </div>
+      </div>
     </motion.div>
   );
 }
 
-export default function Home() {
-  const dispatch = useDispatch();
-  const { products, categories } = useSelector(s => s.products);
-  const featured = products?.filter(p => p.isFeatured)?.slice(0, 4) || products?.slice(0, 4) || [];
-  const trending = products?.filter(p => p.isTrending)?.slice(0, 4) || products?.slice(4, 8) || [];
-  const newArrivals = products?.filter(p => p.isNewArrival)?.slice(0, 4) || products?.slice(8, 12) || [];
+function FeaturedProductSkeleton() {
+  return (
+    <div style={{ background: "#fff", borderRadius: 20, overflow: "hidden", border: "1px solid #EBEBEB" }}>
+      <div style={{ paddingTop: "100%", background: "#F0F0F0" }} />
+      <div style={{ padding: "16px 18px 20px" }}>
+        <div style={{ height: 10, width: "45%", background: "#F0F0F0", borderRadius: 6, marginBottom: 10 }} />
+        <div style={{ height: 16, width: "75%", background: "#F0F0F0", borderRadius: 6, marginBottom: 12 }} />
+        <div style={{ height: 12, width: "55%", background: "#F0F0F0", borderRadius: 6 }} />
+      </div>
+    </div>
+  );
+}
 
-  const cats = (categories?.length > 0
-    ? categories.slice(0, 6).map((c, i) => ({ ...c, img: c.image || c.img || CATEGORY_FALLBACK[i]?.img }))
-    : CATEGORY_FALLBACK);
+export default function Home() {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { products, loading } = useSelector((s) => s.products);
 
   useEffect(() => {
     dispatch(fetchProducts({ limit: 16 }));
-    dispatch(fetchCategories());
   }, [dispatch]);
 
+  const featuredProducts = useMemo(() => {
+    if (!products?.length) return [];
+    const featured = products.filter((p) => p.isFeatured);
+    const rest = products.filter((p) => !p.isFeatured);
+    return [...featured, ...rest].slice(0, 4);
+  }, [products]);
+
+  const heroProduct = featuredProducts[0] || products?.[0];
+  const heroProductImg = heroProduct?.images?.find((i) => i.isPrimary)?.url
+    || heroProduct?.images?.[0]?.url
+    || "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=90&w=1000&auto=format&fit=crop";
+  const heroProductPrice = heroProduct
+    ? formatRs(heroProduct.discount > 0
+      ? heroProduct.price - (heroProduct.price * heroProduct.discount) / 100
+      : heroProduct.price)
+    : null;
+
+  // Hero image tilt
+  const mx = useMotionValue(0), my = useMotionValue(0);
+  const rotateY = useSpring(useTransform(mx, [-0.5, 0.5], [8, -8]), { stiffness: 150, damping: 20 });
+  const rotateX = useSpring(useTransform(my, [-0.5, 0.5], [-6, 6]), { stiffness: 150, damping: 20 });
+  const heroRef = useRef(null);
+  const handleHeroMove = e => {
+    if (!heroRef.current) return;
+    const r = heroRef.current.getBoundingClientRect();
+    mx.set((e.clientX - r.left) / r.width - 0.5);
+    my.set((e.clientY - r.top) / r.height - 0.5);
+  };
+  const heroReset = () => { mx.set(0); my.set(0); };
+
   return (
-    <>
-      <Helmet>
-        <title>Anura Furniture – Dekatana | Furniture කලාවේ මහ ගෙදර</title>
-        <meta name="description" content="Discover premium, modern furniture at Anura Furniture Dekatana. Shop living room, bedroom, dining furniture with AI-powered recommendations and free delivery across Sri Lanka." />
-      </Helmet>
+    <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", background: "#fff", color: "#111", overflowX: "hidden" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@600;700;800;900&family=Abhaya+Libre:wght@400;500;600;700;800&family=Noto+Sans+Sinhala:wght@500;600;700;800&display=swap');
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:#fff;} ::-webkit-scrollbar-thumb{background:#DDD;border-radius:3px;}
+        @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+        @keyframes floatA{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+        @keyframes floatB{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+        @keyframes fadeSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pulseRing{0%{transform:scale(1);opacity:.6}70%{transform:scale(1.4);opacity:0}100%{transform:scale(1.4);opacity:0}}
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        .fa{animation:floatA 5.5s ease-in-out infinite;}
+        .fb{animation:floatB 4s ease-in-out infinite;}
+        .pulse-ring::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid #22C55E;animation:pulseRing 2s ease-out infinite;}
+        .nav-link{background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:#475569;cursor:pointer;padding:6px 0;transition:color .2s;position:relative;}
+        .nav-link:hover{color:#2563eb;}
+        .cat-card{cursor:pointer;transition:transform .3s;}
+        .cat-card:hover{transform:translateY(-6px);}
+        .hero-title-en{
+          display:block;
+          font-family:'Playfair Display',Georgia,'Times New Roman',serif;
+          font-size:clamp(60px,7.2vw,108px);
+          font-weight:800;
+          font-style:normal;
+          line-height:1;
+          letter-spacing:-.025em;
+          background:linear-gradient(to right,#1e3a8a 0%,#2563eb 35%,#06b6d4 62%,#3b82f6 100%);
+          -webkit-background-clip:text;
+          -webkit-text-fill-color:transparent;
+          background-clip:text;
+        }
+        .hero-title-si{
+          display:block;
+          margin-top:clamp(12px,1.8vw,20px);
+          font-family:'Abhaya Libre','Noto Sans Sinhala','Iskoola Pota',sans-serif;
+          font-size:clamp(40px,5.2vw,72px);
+          font-weight:700;
+          line-height:1.15;
+          letter-spacing:.02em;
+        }
+        .hero-si-dark{
+          color:#0f172a;
+          font-weight:800;
+        }
+        .hero-si-gradient{
+          background:linear-gradient(to right,#2563eb 0%,#0891b2 45%,#06b6d4 100%);
+          -webkit-background-clip:text;
+          -webkit-text-fill-color:transparent;
+          background-clip:text;
+          font-weight:800;
+        }
+        .hero-float{
+          background:rgba(255,255,255,0.96);
+          backdrop-filter:blur(16px);
+          -webkit-backdrop-filter:blur(16px);
+          border:1px solid rgba(255,255,255,0.9);
+          box-shadow:0 20px 60px rgba(37,99,235,0.18),0 8px 24px rgba(15,23,42,0.08);
+          z-index:30;
+        }
+        .hero-float-accent{
+          background:linear-gradient(135deg,#2563eb 0%,#0891b2 55%,#06b6d4 100%);
+          box-shadow:0 20px 50px rgba(37,99,235,0.38);
+          z-index:30;
+        }
+      `}</style>
 
-      {/* ========================== HERO ========================== */}
-      <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-white via-primary-50/50 to-cyan-50/40 dark:from-dark-bg dark:via-primary-950 dark:to-gray-950">
-        {/* Animated decorative blue blobs */}
-        <div className="absolute top-1/4 -left-24 w-80 h-80 bg-primary-300/40 dark:bg-primary-600/20 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-1/4 -right-24 w-72 h-72 bg-cyan-300/40 dark:bg-cyan-500/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '-2s' }} />
-        <div className="absolute inset-0 bg-dots text-primary-900/[0.04] dark:text-white/[0.04]" />
+      {/* ══ HERO ════════════════════════════════════════════════ */}
+      <section style={{ minHeight: "100vh", background: "linear-gradient(160deg, #ffffff 0%, #f5f9ff 45%, #eef5ff 100%)", paddingTop: 80, display: "flex", flexDirection: "column", position: "relative", overflow: "visible" }}>
+        {/* Subtle grid bg */}
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(37,99,235,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(37,99,235,0.05) 1px, transparent 1px)", backgroundSize: "60px 60px", opacity: 0.6, pointerEvents: "none" }} />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 w-full">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left: copy */}
-            <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }}>
-              <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 dark:bg-white/10 border border-primary-100 dark:border-white/25 text-primary-700 dark:text-white font-medium text-sm rounded-full mb-6 shadow-sm">
-                <Sparkles className="w-4 h-4 text-cyan-500" /> AI-Powered Furniture Experience
-              </span>
+        {/* Soft blobs */}
+        <div style={{ position: "absolute", top: "16%", right: "6%", width: 480, height: 480, background: "radial-gradient(circle, rgba(37,99,235,0.12) 0%, transparent 70%)", borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "8%", left: "4%", width: 380, height: 380, background: "radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 70%)", borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none" }} />
 
-              <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-black text-gray-900 dark:text-white mb-5 leading-[1.05]">
-                <span className="text-gradient">Furniture</span>
-                <br />
-                <span className="text-gray-900 dark:text-white">කලාවේ</span>{' '}
-                <span className="text-gradient">මහ ගෙදර</span>
-              </h1>
+        <div style={{ maxWidth: 1320, margin: "0 auto", padding: "40px 48px 0", width: "100%", flex: 1, display: "flex", alignItems: "stretch" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 64, alignItems: "center", width: "100%" }}>
 
-              <p className="text-gray-600 dark:text-gray-300 text-lg sm:text-xl mb-8 max-w-xl">
-                Transform your space with Sri Lanka's most premium furniture collection. Crafted with artistry, delivered with care.
-              </p>
+            {/* LEFT COPY */}
+            <div style={{ paddingBottom: 60 }}>
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                style={{ display: "inline-flex", alignItems: "center", gap: 8, border: "1px solid #BFDBFE", borderRadius: 30, padding: "7px 16px", fontSize: 12, color: "#1e3a8a", fontWeight: 600, marginBottom: 32, background: "#EFF6FF" }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22C55E", display: "inline-block", position: "relative" }} className="pulse-ring" />
+                Free island-wide delivery · Sri Lanka
+              </motion.div>
 
-              <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <Link to="/shop" className="btn-primary text-base px-8 py-4 shadow-glow">
-                  Explore Collection <ArrowRight className="w-5 h-5" />
-                </Link>
-                <Link to="/ai-room-designer" className="btn-secondary text-base px-8 py-4">
-                  <Wand2 className="w-5 h-5" /> Try AI Room Designer
-                </Link>
-              </div>
+              <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.7 }}
+                style={{ marginBottom: 8 }}>
+                <motion.span
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.22, duration: 0.65 }}
+                  className="hero-title-en"
+                >
+                  Furniture
+                </motion.span>
+
+                <motion.span
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.38, duration: 0.7 }}
+                  className="hero-title-si"
+                >
+                  <motion.span
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.44, duration: 0.55 }}
+                    className="hero-si-dark"
+                  >
+                    කලාවේ
+                  </motion.span>
+                  {" "}
+                  <motion.span
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.52, duration: 0.55 }}
+                    className="hero-si-gradient"
+                  >
+                    මහ ගෙදර
+                  </motion.span>
+                </motion.span>
+              </motion.h1>
+
+              <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
+                style={{ fontSize: 16, color: "#64748b", lineHeight: 1.85, marginBottom: 40, maxWidth: 440 }}>
+                Transform your space with Sri Lanka&apos;s most premium furniture collection. Crafted with artistry, delivered with care.
+              </motion.p>
+
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }}
+                style={{ display: "flex", gap: 12, marginBottom: 52 }}>
+                <button onClick={() => navigate("/shop")} style={{ background: "linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)", color: "#fff", border: "none", borderRadius: 14, padding: "15px 32px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 9, letterSpacing: ".01em", transition: "transform .15s", boxShadow: "0 12px 30px rgba(37,99,235,0.32)" }}
+                  onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
+                  onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
+                  Explore Collection
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+                <button onClick={() => navigate("/ai-room-designer")} style={{ background: "#fff", color: "#1e3a8a", border: "1.5px solid #BFDBFE", borderRadius: 14, padding: "15px 28px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, transition: "border-color .15s, background .15s" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#2563eb"; e.currentTarget.style.background = "#EFF6FF"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "#BFDBFE"; e.currentTarget.style.background = "#fff"; }}>
+                  ✦ AI Room Designer
+                </button>
+              </motion.div>
 
               {/* Trust row */}
-              <div className="flex items-center gap-4 mb-8">
-                <div className="flex -space-x-3">
-                  {['from-primary-500 to-cyan-500', 'from-cyan-500 to-primary-600', 'from-gold-400 to-gold-600', 'from-primary-700 to-primary-500'].map((g, i) => (
-                    <div key={i} className={`w-9 h-9 rounded-full bg-gradient-to-br ${g} ring-2 ring-white dark:ring-dark-bg`} />
-                  ))}
-                </div>
-                <div>
-                  <div className="flex items-center gap-0.5">
-                    {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="w-3.5 h-3.5 text-gold-400 fill-gold-400" />)}
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Loved by <span className="font-semibold text-gray-900 dark:text-white">5,000+</span> families</p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-x-6 gap-y-3 pt-6 border-t border-gray-100 dark:border-gray-800">
-                {HERO_FEATURES.map(({ icon: Icon, text }) => (
-                  <div key={text} className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">
-                    <Icon className="w-4 h-4 text-primary-600 dark:text-cyan-400" /> {text}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+                style={{ display: "flex", gap: 0, borderTop: "1px solid #F0F0F0", paddingTop: 28 }}>
+                {[["5,000+", "Happy homes"], ["500+", "Products"], ["15 yrs", "Experience"], ["4.9★", "Rating"]].map(([v, l], i) => (
+                  <div key={l} style={{ flex: 1, borderRight: i < 3 ? "1px solid #F0F0F0" : "none", paddingRight: 20, paddingLeft: i > 0 ? 20 : 0 }}>
+                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 700, color: "#1e3a8a", lineHeight: 1 }}>{v}</p>
+                    <p style={{ fontSize: 12, color: "#AAA", marginTop: 4 }}>{l}</p>
                   </div>
                 ))}
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
 
-            {/* Right: 3D image stack */}
-            <HeroImageStack />
+            {/* RIGHT: HERO IMAGE COMPOSITION */}
+            <div ref={heroRef} onMouseMove={handleHeroMove} onMouseLeave={heroReset}
+              style={{ position: "relative", height: "calc(100vh - 80px)", minHeight: 560, maxHeight: 720, perspective: 1800, overflow: "visible" }}>
+
+              {/* Blue glow behind composition */}
+              <div style={{ position: "absolute", inset: "8% 4% 12% 8%", background: "radial-gradient(ellipse, rgba(37,99,235,0.22) 0%, transparent 70%)", borderRadius: "50%", filter: "blur(40px)", pointerEvents: "none", zIndex: 0 }} />
+
+              <motion.div style={{ rotateX, rotateY, transformStyle: "preserve-3d", height: "100%", position: "relative", zIndex: 1 }}>
+
+                {/* Main hero image */}
+                <motion.div
+                  initial={{ opacity: 0, x: 40, scale: 0.96 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  transition={{ delay: 0.2, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                  style={{
+                    position: "absolute", top: "2%", left: "10%", right: "2%", bottom: "6%",
+                    borderRadius: 28, overflow: "hidden",
+                    boxShadow: "0 32px 80px rgba(37,99,235,0.22), 0 12px 40px rgba(15,23,42,0.12)",
+                    transform: "translateZ(0px)",
+                    border: "3px solid rgba(255,255,255,0.85)",
+                  }}
+                >
+                  <img src={heroProductImg} alt={heroProduct?.name || "Premium living room"} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 50%, rgba(15,23,42,0.45) 100%)" }} />
+                  <div style={{ position: "absolute", bottom: 24, left: 24, right: 24 }}>
+                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontWeight: 700, color: "#fff", marginBottom: 4, textShadow: "0 2px 12px rgba(0,0,0,0.3)" }}>
+                      {heroProduct?.category?.name || "Living Room"} Collection
+                    </p>
+                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)" }}>Premium furniture · Handcrafted in Sri Lanka</p>
+                  </div>
+                </motion.div>
+
+                {/* Rating card — top left, prominent */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.85, y: -12 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ delay: 0.55, duration: 0.6 }}
+                  className="fa hero-float"
+                  style={{
+                    position: "absolute", top: "0%", left: "0%",
+                    borderRadius: 22, padding: "18px 22px",
+                    display: "flex", alignItems: "center", gap: 14,
+                    transform: "translateZ(90px)", minWidth: 200,
+                  }}
+                >
+                  <div style={{ width: 52, height: 52, borderRadius: 16, background: "linear-gradient(135deg,#FEF3C7,#FDE68A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 }}>⭐</div>
+                  <div>
+                    <p style={{ fontWeight: 800, fontSize: 26, color: "#1e3a8a", lineHeight: 1, fontFamily: "'Playfair Display', serif" }}>4.9/5</p>
+                    <p style={{ fontSize: 12, color: "#64748b", marginTop: 5, fontWeight: 500 }}>5,000+ happy reviews</p>
+                    <div style={{ marginTop: 6 }}><Stars n={5} size={12} /></div>
+                  </div>
+                </motion.div>
+
+                {/* Real product card — bottom left, large & clickable */}
+                {heroProduct && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.85, x: -16 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    transition={{ delay: 0.7, duration: 0.6 }}
+                    className="fb hero-float"
+                    onClick={() => navigate(`/product/${heroProduct.slug || heroProduct._id}`)}
+                    style={{
+                      position: "absolute", bottom: "10%", left: "-2%",
+                      borderRadius: 22, padding: "14px 16px",
+                      display: "flex", gap: 12, alignItems: "center",
+                      transform: "translateZ(110px)", maxWidth: 240, cursor: "pointer",
+                    }}
+                  >
+                    <div style={{ width: 64, height: 64, borderRadius: 16, overflow: "hidden", flexShrink: 0, border: "2px solid #EFF6FF" }}>
+                      <img src={heroProductImg} alt={heroProduct.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    </div>
+                    <div>
+                      <span style={{ background: "linear-gradient(135deg,#2563eb,#06b6d4)", color: "#fff", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20, letterSpacing: ".08em" }}>
+                        {heroProduct.isBestSeller ? "BESTSELLER" : heroProduct.isFeatured ? "FEATURED" : "SHOP NOW"}
+                      </span>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", marginTop: 6, lineHeight: 1.25, fontFamily: "'Cormorant Garamond', serif" }}>{heroProduct.name}</p>
+                      <p style={{ fontSize: 15, fontWeight: 800, color: "#2563eb", marginTop: 4 }}>{heroProductPrice}</p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Free delivery — top right, bold */}
+                <motion.div
+                  initial={{ opacity: 0, y: -12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.85, duration: 0.55 }}
+                  className="fa hero-float-accent"
+                  style={{
+                    position: "absolute", top: "4%", right: "0%",
+                    borderRadius: 20, padding: "14px 18px",
+                    display: "flex", alignItems: "center", gap: 12,
+                    transform: "translateZ(100px)",
+                  }}
+                >
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🚚</div>
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: 1 }}>Free Delivery</p>
+                    <p style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 3 }}>Island-wide · Same week</p>
+                  </div>
+                </motion.div>
+
+                {/* New arrivals pill — bottom right */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.95 }}
+                  className="fb"
+                  style={{
+                    position: "absolute", bottom: "6%", right: "0%",
+                    background: "#fff", border: "2px solid #BBF7D0",
+                    borderRadius: 20, padding: "12px 18px",
+                    boxShadow: "0 12px 36px rgba(22,163,74,0.15)",
+                    transform: "translateZ(80px)",
+                  }}
+                >
+                  <p style={{ fontSize: 13, fontWeight: 700, color: "#15803D" }}>✦ New arrivals weekly</p>
+                </motion.div>
+
+              </motion.div>
+            </div>
+
           </div>
         </div>
 
-        {/* Scroll indicator */}
-        <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 2 }}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 w-6 h-10 border-2 border-primary-300/70 dark:border-white/30 rounded-full items-start justify-center pt-1.5 hidden sm:flex">
-          <div className="w-1.5 h-3 bg-primary-400/80 dark:bg-white/60 rounded-full" />
-        </motion.div>
+        {/* Bottom scroll nudge */}
+        <div style={{ textAlign: "center", paddingBottom: 28, position: "relative", zIndex: 2 }}>
+          <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 2 }} style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+            <div style={{ width: 22, height: 36, border: "1.5px solid #DDD", borderRadius: 11, display: "flex", justifyContent: "center", alignItems: "flex-start", paddingTop: 5 }}>
+              <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 1.4 }} style={{ width: 3, height: 7, background: "#BBB", borderRadius: 2 }} />
+            </div>
+            <p style={{ fontSize: 10, color: "#CCC", letterSpacing: ".12em", textTransform: "uppercase" }}>Scroll</p>
+          </motion.div>
+        </div>
       </section>
 
-      {/* ========================== MARQUEE STRIP ========================== */}
-      <div className="bg-primary-900 dark:bg-primary-950 py-4 overflow-hidden">
-        <motion.div
-          className="flex gap-12 whitespace-nowrap"
-          animate={{ x: ['0%', '-50%'] }}
-          transition={{ repeat: Infinity, duration: 22, ease: 'linear' }}
-        >
-          {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
-            <span key={i} className="text-white/70 font-medium text-sm tracking-wide flex-shrink-0">{item}</span>
+      {/* ══ MARQUEE ═════════════════════════════════════════════ */}
+      <div style={{ background: "linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #1e3a8a 100%)", padding: "15px 0", overflow: "hidden" }}>
+        <div style={{ display: "flex", gap: 48, whiteSpace: "nowrap", animation: "marquee 26s linear infinite" }}>
+          {[...MARQUEE, ...MARQUEE].map((t, i) => (
+            <span key={i} style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, fontWeight: 500, letterSpacing: ".06em", flexShrink: 0 }}>{t}</span>
           ))}
-        </motion.div>
+        </div>
       </div>
 
-      {/* ========================== CATEGORIES ========================== */}
-      <section className="py-20 px-4 bg-mesh-light">
-        <div className="max-w-7xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
-            <span className="badge-cyan mb-3">Browse</span>
-            <h2 className="font-display text-4xl font-bold text-gray-900 dark:text-white mb-3">Shop by Category</h2>
-            <p className="text-gray-500 dark:text-gray-400">Explore our curated furniture collections for every space</p>
-          </motion.div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {cats.map((cat, i) => (
-              <motion.div key={cat._id || i} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
-                <Link to={`/shop?category=${cat.slug || cat._id}`}
-                  className="group relative block rounded-2xl overflow-hidden aspect-[3/4] shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300">
-                  <img src={cat.img} alt={cat.name} loading="lazy"
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary-950/85 via-primary-950/20 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-3">
-                    <p className="text-white font-semibold text-sm drop-shadow">{cat.name}</p>
-                    <span className="flex items-center gap-1 text-cyan-300 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                      Shop now <ChevronRight className="w-3 h-3" />
-                    </span>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ========================== 3D ROOM SHOWCASE ========================== */}
-      <section className="py-20 px-4 overflow-hidden">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-          <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-            <span className="badge-primary mb-3"><Boxes className="w-3 h-3 mr-1" /> Visualise in 3D</span>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
-              See it in your room <span className="text-gradient">before you buy</span>
+      {/* ══ CATEGORIES ══════════════════════════════════════════ */}
+      <section style={{ padding: "100px 48px", background: "#fff", maxWidth: 1320, margin: "0 auto" }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 52 }}>
+          <div>
+            <p style={{ fontSize: 11, color: "#AAA", textTransform: "uppercase", letterSpacing: ".14em", marginBottom: 10 }}>Browse</p>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(32px, 3.5vw, 52px)", fontWeight: 600, color: "#111", lineHeight: 1.1 }}>
+              Shop by <em style={{ fontStyle: "italic", color: "#2563eb" }}>Room</em>
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-lg mb-8 max-w-lg">
-              Upload a photo of your space and our AI Room Designer places real furniture into it — explore layouts, colours and styles in lifelike detail.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link to="/ai-room-designer" className="btn-primary px-7 py-3.5">
-                Launch Room Designer <Wand2 className="w-4 h-4" />
-              </Link>
-              <Link to="/shop" className="btn-secondary px-7 py-3.5">
-                Browse Furniture <MoveRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </motion.div>
+          </div>
+          <button onClick={() => navigate("/shop")} style={{ background: "none", border: "1.5px solid #E0E0E0", borderRadius: 12, padding: "10px 22px", fontSize: 13, color: "#555", cursor: "pointer", fontWeight: 500, display: "flex", alignItems: "center", gap: 7 }}>
+            View all rooms
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            whileHover={{ rotateY: -6, rotateX: 4 }}
-            transition={{ type: 'spring', stiffness: 120, damping: 18 }}
-            className="relative [perspective:1200px]"
-          >
-            <div className="relative rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-black/5 dark:ring-white/10" style={{ transformStyle: 'preserve-3d' }}>
-              <img
-                src="https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=1200"
-                alt="Designed living room"
-                className="w-full aspect-[4/3] object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-tr from-primary-900/30 to-transparent" />
-
-              {SHOWCASE_TAGS.map((tag, i) => (
-                <motion.div
-                  key={tag.label}
-                  initial={{ opacity: 0, scale: 0.6 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.4 + i * 0.2 }}
-                  className={`absolute ${tag.pos} px-3 py-2 rounded-xl bg-white/85 dark:bg-gray-900/85 backdrop-blur-md shadow-lg border border-white/40`}
-                >
-                  <p className="text-[11px] font-semibold text-gray-900 dark:text-white leading-none">{tag.label}</p>
-                  <p className="text-[10px] text-primary-700 dark:text-cyan-300 mt-0.5">{tag.price}</p>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gridTemplateRows: "280px 280px", gap: 14 }}>
+          {CATEGORIES.map((cat, i) => {
+            const spans = [
+              { gridColumn: "1", gridRow: "1 / 3" },
+              { gridColumn: "2", gridRow: "1" },
+              { gridColumn: "3", gridRow: "1" },
+              { gridColumn: "2", gridRow: "2" },
+              { gridColumn: "3", gridRow: "2" },
+            ];
+            return (
+              <motion.div key={cat.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.07 }}
+                onClick={() => navigate(`/shop/${slugify(cat.name)}`)}
+                className="cat-card"
+                style={{ ...spans[i], position: "relative", borderRadius: 20, overflow: "hidden", cursor: "pointer" }}>
+                <img src={cat.img} alt={cat.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .6s" }}
+                  onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
+                  onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.05) 50%, transparent 100%)" }} />
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: i === 0 ? "28px 28px" : "18px 18px" }}>
+                  <p style={{ fontFamily: "'Cormorant Garamond', serif", color: "#fff", fontWeight: 600, fontSize: i === 0 ? 28 : 18, lineHeight: 1.2, marginBottom: 4 }}>{cat.name}</p>
+                  <p style={{ fontSize: 12, color: "rgba(255,255,255,0.65)" }}>{cat.count}</p>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 
-      {/* ========================== AI BANNER ========================== */}
-      <section className="py-8 px-4">
-        <div className="max-w-7xl mx-auto">
+      {/* ══ FEATURED PRODUCTS ═══════════════════════════════════ */}
+      <section style={{ padding: "80px 48px 100px", background: "#FAFAFA" }}>
+        <div style={{ maxWidth: 1320, margin: "0 auto" }}>
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary-800 via-primary-700 to-cyan-600 p-8 sm:p-12">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 animate-spin-slow" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-            <div className="relative z-10 flex flex-col sm:flex-row items-center gap-8">
-              <div className="flex-1 text-center sm:text-left">
-                <span className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 text-white/80 text-xs rounded-full mb-3">
-                  <Sparkles className="w-3 h-3" /> Powered by Google Gemini
-                </span>
-                <h3 className="font-display text-3xl font-bold text-white mb-2">AI Furniture Advisor</h3>
-                <p className="text-white/70 mb-4 max-w-lg">Tell us your style, budget, and room size – our AI will handpick the perfect furniture just for you.</p>
-                <Link to="/ai-recommendations" className="inline-flex items-center gap-2 px-6 py-3 bg-white text-primary-800 font-bold rounded-xl hover:bg-gray-50 transition-colors">
-                  Get AI Recommendations <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-              <motion.div animate={{ y: [0, -12, 0] }} transition={{ repeat: Infinity, duration: 4 }} className="text-7xl sm:text-8xl">🤖</motion.div>
+            style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 48 }}>
+            <div>
+              <p style={{ fontSize: 11, color: "#AAA", textTransform: "uppercase", letterSpacing: ".14em", marginBottom: 10 }}>Handpicked</p>
+              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(30px, 3vw, 48px)", fontWeight: 600, color: "#111" }}>Featured <em style={{ color: "#2563eb" }}>Collection</em></h2>
             </div>
+            <button onClick={() => navigate("/shop?isFeatured=true")} style={{ background: "none", border: "1.5px solid #E0E0E0", borderRadius: 12, padding: "10px 22px", fontSize: 13, color: "#555", cursor: "pointer", fontWeight: 500, display: "flex", alignItems: "center", gap: 7 }}>
+              View all <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
           </motion.div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 20 }}>
+            {loading && Array.from({ length: 4 }).map((_, i) => <FeaturedProductSkeleton key={i} />)}
+            {!loading && featuredProducts.map((product, i) => (
+              <FeaturedProductCard key={product._id} product={product} i={i} />
+            ))}
+            {!loading && featuredProducts.length === 0 && (
+              <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 24px", color: "#888" }}>
+                <p style={{ fontSize: 16, marginBottom: 12 }}>No products available yet.</p>
+                <button onClick={() => navigate("/shop")} style={{ background: "linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)", color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                  Browse Shop
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
-      {/* ========================== FEATURED PRODUCTS ========================== */}
-      {featured.length > 0 && (
-        <section className="py-16 px-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-10">
-              <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-                <h2 className="font-display text-4xl font-bold text-gray-900 dark:text-white">Featured Collection</h2>
-                <p className="text-gray-500 dark:text-gray-400 mt-1">Handpicked premium pieces</p>
-              </motion.div>
-              <Link to="/shop?featured=true" className="flex items-center gap-1 text-primary-700 dark:text-primary-400 font-medium hover:gap-2 transition-all text-sm">
-                View All <ChevronRight className="w-4 h-4" />
-              </Link>
+      {/* ══ SPLIT: AI ROOM DESIGNER ═════════════════════════════ */}
+      <section style={{ background: "#fff", padding: "100px 48px", overflow: "hidden" }}>
+        <div style={{ maxWidth: 1320, margin: "0 auto", display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 80, alignItems: "center" }}>
+          {/* Image side */}
+          <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} style={{ position: "relative" }}>
+            <div style={{ borderRadius: 28, overflow: "hidden", boxShadow: "0 28px 80px rgba(0,0,0,0.10)" }}>
+              <img src="https://images.unsplash.com/photo-1631679706909-1844bbd07221?q=90&w=1100&auto=format&fit=crop" alt="AI room design" style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", display: "block" }} />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featured.map((product, i) => <ProductCard key={product._id} product={product} index={i} />)}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ========================== TRENDING ========================== */}
-      {trending.length > 0 && (
-        <section className="py-16 px-4 bg-gray-50/50 dark:bg-gray-900/20">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-10">
-              <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-                <h2 className="font-display text-4xl font-bold text-gray-900 dark:text-white">🔥 Trending Now</h2>
-                <p className="text-gray-500 dark:text-gray-400 mt-1">Most loved by our customers</p>
-              </motion.div>
-              <Link to="/shop?trending=true" className="flex items-center gap-1 text-primary-700 dark:text-primary-400 font-medium hover:gap-2 transition-all text-sm">
-                View All <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {trending.map((product, i) => <ProductCard key={product._id} product={product} index={i} />)}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ========================== STATS ========================== */}
-      <section className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Price pins */}
             {[
-              { value: '5,000+', label: 'Happy Customers', emoji: '😊' },
-              { value: '500+', label: 'Products Available', emoji: '🛋️' },
-              { value: '15+', label: 'Years of Excellence', emoji: '🏆' },
-              { value: '99%', label: 'Satisfaction Rate', emoji: '⭐' },
-            ].map(({ value, label, emoji }, i) => (
-              <motion.div key={label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -6 }}
-                className="card p-6 text-center">
-                <span className="text-3xl mb-2 block">{emoji}</span>
-                <p className="font-display font-black text-3xl text-gradient mb-1">{value}</p>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">{label}</p>
+              { label: "Osaka Sofa", price: "Rs. 188,000", top: "18%", left: "10%" },
+              { label: "Walnut Table", price: "Rs. 56,000", bottom: "22%", right: "8%" },
+            ].map(tag => (
+              <motion.div key={tag.label} initial={{ opacity: 0, scale: 0.7 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
+                style={{ position: "absolute", ...(tag.top ? { top: tag.top } : { bottom: tag.bottom }), ...(tag.left ? { left: tag.left } : { right: tag.right }), background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", borderRadius: 14, padding: "9px 14px", boxShadow: "0 8px 28px rgba(0,0,0,0.10)", border: "1px solid rgba(255,255,255,0.8)", display: "flex", alignItems: "center", gap: 7 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2563eb", flexShrink: 0 }} />
+                <div>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: "#111" }}>{tag.label}</p>
+                  <p style={{ fontSize: 11, color: "#888" }}>{tag.price}</p>
+                </div>
               </motion.div>
             ))}
-          </div>
+            {/* AI badge */}
+            <motion.div className="fb" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+              style={{ position: "absolute", top: "6%", right: "-6%", background: "linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)", borderRadius: 20, padding: "16px 20px", boxShadow: "0 16px 48px rgba(37,99,235,0.35)" }}>
+              <p style={{ fontSize: 28, marginBottom: 6 }}>🤖</p>
+              <p style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>AI Room Designer</p>
+              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>Powered by Gemini</p>
+            </motion.div>
+          </motion.div>
+
+          {/* Copy */}
+          <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+            <p style={{ fontSize: 11, color: "#AAA", textTransform: "uppercase", letterSpacing: ".14em", marginBottom: 14 }}>✦ AI Powered</p>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(30px, 3vw, 52px)", fontWeight: 600, color: "#111", lineHeight: 1.12, marginBottom: 20 }}>
+              See it in your room<br />
+              <em style={{ fontStyle: "italic", color: "#555" }}>before you buy</em>
+            </h2>
+            <p style={{ fontSize: 15, color: "#666", lineHeight: 1.85, marginBottom: 36, maxWidth: 420 }}>
+              Upload a photo of your space and our AI places real furniture into it instantly. Explore different layouts, colors and styles in lifelike detail — for free.
+            </p>
+            {["Real-time furniture placement in your photo", "Explore unlimited layouts and colorways", "Share with family before you buy", "Works on mobile, tablet & desktop"].map((f, i) => (
+              <div key={f} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+                <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#F0FDF4", border: "1px solid #BBF7D0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
+                </div>
+                <span style={{ fontSize: 14, color: "#444" }}>{f}</span>
+              </div>
+            ))}
+            <div style={{ display: "flex", gap: 12, marginTop: 40 }}>
+              <button onClick={() => navigate("/ai-room-designer")} style={{ background: "linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)", color: "#fff", border: "none", borderRadius: 14, padding: "14px 28px", fontSize: 14, fontWeight: 600, cursor: "pointer", letterSpacing: ".01em", boxShadow: "0 12px 30px rgba(37,99,235,0.3)" }}>
+                Launch Room Designer
+              </button>
+              <button onClick={() => navigate("/shop")} style={{ background: "#fff", color: "#1e3a8a", border: "1.5px solid #BFDBFE", borderRadius: 14, padding: "14px 24px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                Browse Furniture
+              </button>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ========================== NEW ARRIVALS ========================== */}
-      {newArrivals.length > 0 && (
-        <section className="py-16 px-4 bg-gray-50/50 dark:bg-gray-900/20">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-10">
-              <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-                <h2 className="font-display text-4xl font-bold text-gray-900 dark:text-white">✨ New Arrivals</h2>
-                <p className="text-gray-500 dark:text-gray-400 mt-1">Fresh designs, just in</p>
-              </motion.div>
-              <Link to="/shop?newArrival=true" className="flex items-center gap-1 text-primary-700 dark:text-primary-400 font-medium text-sm hover:gap-2 transition-all">
-                View All <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {newArrivals.map((product, i) => <ProductCard key={product._id} product={product} index={i} />)}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* ══ STATS ════════════════════════════════════════════════ */}
+      <section style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #0891b2 100%)", padding: "72px 48px" }}>
+        <div style={{ maxWidth: 1320, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
+          {[["5,000+", "Happy families across Sri Lanka", "🏠"], ["500+", "Premium products available", "🛋️"], ["15+", "Years of craftsmanship", "🏆"], ["99%", "Customer satisfaction rate", "⭐"]].map(([v, l, icon], i) => (
+            <motion.div key={l} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+              style={{ textAlign: "center", padding: "20px 32px", borderRight: i < 3 ? "1px solid rgba(255,255,255,0.08)" : "none" }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>{icon}</div>
+              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 52, fontWeight: 700, color: "#fff", lineHeight: 1 }}>{v}</p>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginTop: 8, lineHeight: 1.5 }}>{l}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
-      {/* ========================== TESTIMONIALS ========================== */}
-      <section className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
-            <h2 className="font-display text-4xl font-bold text-gray-900 dark:text-white mb-3">What Our Customers Say</h2>
-            <p className="text-gray-500 dark:text-gray-400">Join thousands of happy homeowners</p>
+      {/* ══ TESTIMONIALS ════════════════════════════════════════ */}
+      <section style={{ background: "#FAFAFA", padding: "100px 48px" }}>
+        <div style={{ maxWidth: 1320, margin: "0 auto" }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ textAlign: "center", marginBottom: 60 }}>
+            <p style={{ fontSize: 11, color: "#AAA", textTransform: "uppercase", letterSpacing: ".14em", marginBottom: 12 }}>Testimonials</p>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(30px, 3vw, 52px)", fontWeight: 600, color: "#111" }}>
+              Loved by <em style={{ fontStyle: "italic", color: "#2563eb" }}>5,000+ homes</em>
+            </h2>
           </motion.div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map(({ name, location, rating, text }, i) => (
-              <motion.div key={name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -6 }}
-                className="card p-6">
-                <div className="flex mb-3">
-                  {Array.from({ length: rating }).map((_, j) => <Star key={j} className="w-4 h-4 text-gold-400 fill-gold-400" />)}
-                </div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 leading-relaxed italic">"{text}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-700 to-cyan-500 flex items-center justify-center text-white font-bold text-sm">{name.charAt(0)}</div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+            {TESTIMONIALS.map(({ name, city, initials, text, stars, bg }, i) => (
+              <motion.div key={name} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                style={{ background: "#fff", borderRadius: 24, padding: "32px", border: "1px solid #EBEBEB", cursor: "pointer", transition: "transform .3s, box-shadow .3s" }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-6px)"; e.currentTarget.style.boxShadow = "0 20px 56px rgba(0,0,0,0.08)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 64, color: "#EEE", lineHeight: 0.6, marginBottom: 24 }}>"</div>
+                <Stars n={stars} size={13} />
+                <p style={{ color: "#555", fontSize: 15, lineHeight: 1.8, margin: "16px 0 28px", fontStyle: "italic" }}>"{text}"</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 20, borderTop: "1px solid #F0F0F0" }}>
+                  <div style={{ width: 42, height: 42, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 14, color: "#111" }}>{initials}</div>
                   <div>
-                    <p className="font-semibold text-gray-900 dark:text-white text-sm">{name}</p>
-                    <p className="text-gray-400 text-xs">{location}</p>
+                    <p style={{ fontWeight: 600, fontSize: 14, color: "#111" }}>{name}</p>
+                    <p style={{ fontSize: 12, color: "#AAA" }}>{city}, Sri Lanka</p>
+                  </div>
+                  <div style={{ marginLeft: "auto" }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DDD" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                   </div>
                 </div>
               </motion.div>
@@ -464,32 +650,40 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ========================== CTA ========================== */}
-      <section className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-gray-900 to-primary-900 p-10 sm:p-16 text-center">
-            <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1618220179428-22790b461013?w=1920')] bg-cover bg-center" />
-            <div className="absolute inset-0 bg-gradient-to-r from-gray-950/80 to-primary-950/70" />
-            <div className="relative z-10">
-              <h2 className="font-display text-4xl sm:text-5xl font-bold text-white mb-4">
-                Design Your Dream Space Today
+      {/* ══ CTA ══════════════════════════════════════════════════ */}
+      <section style={{ padding: "80px 48px 100px", background: "#fff" }}>
+        <div style={{ maxWidth: 1320, margin: "0 auto" }}>
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            style={{ position: "relative", borderRadius: 36, overflow: "hidden" }}>
+            <img src="https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?q=90&w=1800&auto=format&fit=crop" alt="Beautiful interior" style={{ width: "100%", height: 480, objectFit: "cover", display: "block" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)" }} />
+            <div style={{ position: "absolute", top: "50%", left: "8%", transform: "translateY(-50%)", maxWidth: 520 }}>
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: ".14em", marginBottom: 16 }}>✦ Design Your Space</p>
+              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(36px, 4vw, 62px)", fontWeight: 600, color: "#fff", lineHeight: 1.1, marginBottom: 20 }}>
+                Transform your<br />
+                <em style={{ fontStyle: "italic" }}>home today</em>
               </h2>
-              <p className="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
-                From modern minimalist to classic royal, we have furniture to match every style and budget.
+              <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.75, marginBottom: 36, maxWidth: 400 }}>
+                Premium furniture crafted for every style and budget. Free delivery across Sri Lanka.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/shop" className="btn-primary px-8 py-4 text-base">
-                  Shop Now <ArrowRight className="w-5 h-5" />
-                </Link>
-                <Link to="/custom-order" className="flex items-center justify-center gap-2 px-8 py-4 border border-white/30 text-white rounded-2xl hover:bg-white/10 transition-all text-base font-semibold">
-                  Request Custom Order
-                </Link>
+              <div style={{ display: "flex", gap: 12 }}>
+                <button onClick={() => navigate("/shop")} style={{ background: "#fff", color: "#111", border: "none", borderRadius: 14, padding: "15px 32px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, transition: "transform .15s" }}
+                  onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
+                  onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
+                  Shop Now
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+                <button onClick={() => navigate("/custom-order")} style={{ background: "transparent", color: "#fff", border: "1.5px solid rgba(255,255,255,0.4)", borderRadius: 14, padding: "15px 28px", fontSize: 14, fontWeight: 500, cursor: "pointer", transition: "background .2s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                  Custom Order
+                </button>
               </div>
             </div>
           </motion.div>
         </div>
       </section>
-    </>
+
+    </div>
   );
 }
