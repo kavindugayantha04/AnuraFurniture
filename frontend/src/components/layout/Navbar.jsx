@@ -33,6 +33,15 @@ const DARK_HERO_ROUTES = [
 const isDarkHeroRoute = (pathname) =>
   DARK_HERO_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 
+// Light content pages — navbar stays solid so it never overlaps breadcrumbs/body text
+const isLightContentRoute = (pathname) =>
+  pathname.startsWith('/product/') ||
+  pathname.startsWith('/cart') ||
+  pathname.startsWith('/checkout') ||
+  pathname.startsWith('/orders') ||
+  pathname.startsWith('/profile') ||
+  pathname.startsWith('/wishlist');
+
 export default function Navbar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -45,8 +54,9 @@ export default function Navbar() {
   const cartCount = cart?.items?.reduce((s, i) => s + i.quantity, 0) || 0;
 
   const [scrolled, setScrolled] = useState(false);
+  const solidNav = scrolled || isLightContentRoute(location.pathname);
   // When transparent over a dark hero (or in dark mode), use light-on-dark styling
-  const onDark = darkMode || (!scrolled && isDarkHeroRoute(location.pathname));
+  const onDark = darkMode || (!solidNav && isDarkHeroRoute(location.pathname));
   const iconBtnClass = `p-2 rounded-xl transition-colors ${
     onDark
       ? 'text-white hover:bg-white/10'
@@ -98,8 +108,8 @@ export default function Navbar() {
         initial={{ y: -80 }}
         animate={{ y: 0 }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? 'glass shadow-glass border-b border-white/10 bg-white/90 dark:bg-dark-bg/90 backdrop-blur-xl'
+          solidNav
+            ? 'glass shadow-glass border-b border-gray-200/80 dark:border-white/10 bg-white/95 dark:bg-dark-bg/95 backdrop-blur-xl'
             : onDark
               ? 'bg-primary-950/30 backdrop-blur-md border-b border-white/10'
               : 'bg-transparent'

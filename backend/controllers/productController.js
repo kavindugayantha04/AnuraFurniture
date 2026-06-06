@@ -1,4 +1,5 @@
 const asyncHandler = require('express-async-handler');
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 
@@ -68,8 +69,13 @@ exports.getProducts = asyncHandler(async (req, res) => {
 
 // @desc    Get single product
 exports.getProduct = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const lookup = mongoose.Types.ObjectId.isValid(id) && String(new mongoose.Types.ObjectId(id)) === id
+    ? { $or: [{ _id: id }, { slug: id }] }
+    : { slug: id };
+
   const product = await Product.findOne({
-    $or: [{ _id: req.params.id }, { slug: req.params.id }],
+    ...lookup,
     isActive: true,
   }).populate('category', 'name slug').populate('reviews.user', 'name avatar');
 

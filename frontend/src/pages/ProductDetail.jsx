@@ -8,7 +8,7 @@ import {
   Shield, RefreshCw, Minus, Plus, Check, Info, Sparkles, MessageCircle,
   ZoomIn, ChevronLeft,
 } from 'lucide-react';
-import { fetchProduct } from '../store/slices/productSlice';
+import { fetchProduct, clearProduct } from '../store/slices/productSlice';
 import { toggleWishlist } from '../store/slices/wishlistSlice';
 import ProductCard from '../components/product/ProductCard';
 import api from '../services/api';
@@ -37,6 +37,7 @@ export default function ProductDetail() {
     : product?.price || 0;
 
   useEffect(() => {
+    dispatch(clearProduct());
     dispatch(fetchProduct(id));
     window.scrollTo(0, 0);
   }, [id, dispatch]);
@@ -91,7 +92,7 @@ export default function ProductDetail() {
 
   if (productLoading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="max-w-7xl mx-auto px-4 pt-24 lg:pt-28 pb-12">
         <div className="grid md:grid-cols-2 gap-10">
           <div className="aspect-square skeleton rounded-2xl" />
           <div className="space-y-4">
@@ -106,7 +107,7 @@ export default function ProductDetail() {
 
   if (!product) {
     return (
-      <div className="text-center py-20">
+      <div className="text-center pt-24 lg:pt-28 pb-20 px-4">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Product Not Found</h2>
         <Link to="/shop" className="btn-primary">Back to Shop</Link>
       </div>
@@ -124,21 +125,21 @@ export default function ProductDetail() {
       </Helmet>
 
       <div className="min-h-screen bg-white dark:bg-dark-bg">
-        {/* Breadcrumb */}
-        <div className="bg-gray-50 dark:bg-gray-900/30 py-4 px-4">
-          <div className="max-w-7xl mx-auto flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 flex-wrap">
-            <Link to="/" className="hover:text-primary-700">Home</Link>
-            <ChevronRight className="w-3 h-3" />
-            <Link to="/shop" className="hover:text-primary-700">Shop</Link>
+        {/* Breadcrumb — pt clears fixed navbar */}
+        <div className="bg-gray-50 dark:bg-gray-900/30 border-b border-gray-100 dark:border-gray-800 pt-24 lg:pt-28 pb-4 px-4">
+          <nav aria-label="Breadcrumb" className="max-w-7xl mx-auto flex items-center gap-1.5 sm:gap-2 text-sm text-gray-500 dark:text-gray-400 flex-wrap">
+            <Link to="/" className="hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap">Home</Link>
+            <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" aria-hidden="true" />
+            <Link to="/shop" className="hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap">Shop</Link>
             {product.category && (
               <>
-                <ChevronRight className="w-3 h-3" />
-                <Link to={`/shop/${product.category.slug}`} className="hover:text-primary-700">{product.category.name}</Link>
+                <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" aria-hidden="true" />
+                <Link to={`/shop/${product.category.slug}`} className="hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap">{product.category.name}</Link>
               </>
             )}
-            <ChevronRight className="w-3 h-3" />
-            <span className="text-gray-900 dark:text-white truncate max-w-xs">{product.name}</span>
-          </div>
+            <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" aria-hidden="true" />
+            <span className="text-gray-900 dark:text-white font-medium truncate max-w-[min(100%,14rem)] sm:max-w-md" aria-current="page">{product.name}</span>
+          </nav>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">

@@ -80,10 +80,16 @@ const importData = async () => {
         price: 45000,
         discount: 0,
         stock: 25,
-        images: [{ url: 'https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=800', isPrimary: true }],
+        images: [{
+          url: 'https://images.unsplash.com/photo-1580480055273-2289b485ad41?w=800',
+          alt: 'Executive Office Chair',
+          isPrimary: true,
+        }],
         materials: ['Leather', 'Aluminum', 'Nylon'],
         colors: [{ name: 'Black', hex: '#000000' }],
-        isTrending: true, isActive: true,
+        isFeatured: true,
+        isTrending: true,
+        isActive: true,
       },
     ];
 
@@ -112,5 +118,41 @@ const destroyData = async () => {
   }
 };
 
+const patchSampleImages = async () => {
+  try {
+    await connectDB();
+
+    const updates = [
+      {
+        slug: 'executive-office-chair',
+        set: {
+          isFeatured: true,
+          images: [{
+            url: 'https://images.unsplash.com/photo-1580480055273-2289b485ad41?w=800',
+            alt: 'Executive Office Chair',
+            isPrimary: true,
+          }],
+        },
+      },
+    ];
+
+    for (const { slug, set } of updates) {
+      const result = await Product.updateOne({ slug }, { $set: set });
+      if (result.matchedCount) {
+        console.log(`✅ Updated product: ${slug}`);
+      } else {
+        console.log(`⚠️  Product not found (skipped): ${slug}`);
+      }
+    }
+
+    console.log('\n🎉 Sample product patch complete.\n');
+    process.exit(0);
+  } catch (err) {
+    console.error('❌ Patch error:', err);
+    process.exit(1);
+  }
+};
+
 if (process.argv[2] === '-d') destroyData();
+else if (process.argv[2] === '--patch') patchSampleImages();
 else importData();
