@@ -23,8 +23,7 @@ const NAV_LINKS = [
 
 // Routes whose top section is a dark hero band flush under the navbar.
 // Matches the exact path or any sub-path (e.g. '/shop' covers '/shop/living-room').
-// NOTE: '/' (Home) is excluded — its parallax hero leaves a light strip at the
-// very top where the navbar sits, so the navbar there should use light styling.
+// NOTE: '/' (Home) is excluded — its hero uses a light white/blue background.
 const DARK_HERO_ROUTES = [
   '/shop', '/about', '/contact', '/custom-order',
   '/ai-recommendations', '/ai-room-designer',
