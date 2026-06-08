@@ -145,7 +145,7 @@ function App() {
       </main>
       {!isAdminRoute && !isAuthRoute && <Footer />}
       {!isAdminRoute && <CartDrawer />}
-      {!isAdminRoute && <AIChatbot />}
+      {!isAdminRoute && !isAuthRoute && <AIChatbot />}
     </div>
   );
 }

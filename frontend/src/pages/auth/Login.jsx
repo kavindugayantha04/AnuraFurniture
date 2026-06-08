@@ -114,29 +114,28 @@ export default function Login() {
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary-600/15 rounded-full blur-[80px]" />
         </div>
 
-        <div className="relative z-10 min-h-screen grid lg:grid-cols-2">
+        <div className="relative z-10 min-h-screen lg:grid lg:grid-cols-2 lg:items-center">
           {/* ── Left: Brand ── */}
-          <div className="hidden lg:flex flex-col justify-between px-14 xl:px-20 py-10 border-r border-white/[0.06]">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-2 text-blue-200/70 hover:text-white text-sm font-medium transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Back to store
-            </Link>
-
+          <div className="hidden lg:flex lg:items-center lg:justify-center px-10 xl:px-16 py-14 border-r border-white/[0.06]">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55 }}
-              className="max-w-[28rem]"
+              className="w-full max-w-[26rem] flex flex-col gap-8"
             >
-              {/* Logo + brand name — aligned row */}
-              <div className="flex items-center gap-5 mb-10">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 text-blue-200/70 hover:text-white text-sm font-medium transition-colors w-fit"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back to store
+              </Link>
+
+              <div className="flex items-center gap-5">
                 <BrandLogo
                   forDarkBg
                   size="2xl"
-                  className="h-28 w-28 flex-shrink-0 drop-shadow-[0_0_28px_rgba(34,211,238,0.3)]"
+                  className="h-24 w-24 flex-shrink-0 drop-shadow-[0_0_28px_rgba(34,211,238,0.3)]"
                 />
                 <div className="min-w-0">
                   <p className="font-display font-bold text-white text-xl leading-tight tracking-tight">
@@ -148,54 +147,56 @@ export default function Login() {
                 </div>
               </div>
 
-              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-400/20 text-cyan-200 text-xs font-semibold tracking-wide mb-6">
-                <Sparkles className="w-3.5 h-3.5" />
-                Premium Furniture Shop
-              </span>
-
-              <h1 className="mb-5">
-                <span className="login-title-en">Furniture</span>
-                <span className="login-title-si">
-                  <span className="login-si-light">කලාවේ </span>
-                  <span className="login-si-gradient">මහ ගෙදර</span>
+              <div>
+                <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-400/20 text-cyan-200 text-xs font-semibold tracking-wide mb-5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Premium Furniture Shop
                 </span>
-              </h1>
 
-              <p className="text-blue-100/60 text-[15px] leading-[1.75] mb-9 max-w-sm">
-                Welcome back. Sign in to track orders, save your wishlist, and unlock AI-powered room design tools.
-              </p>
+                <h1 className="mb-4">
+                  <span className="login-title-en">Furniture</span>
+                  <span className="login-title-si">
+                    <span className="login-si-light">කලාවේ </span>
+                    <span className="login-si-gradient">මහ ගෙදර</span>
+                  </span>
+                </h1>
 
-              <div className="grid grid-cols-2 gap-3">
+                <p className="text-blue-100/60 text-[15px] leading-[1.75]">
+                  Welcome back. Sign in to track orders, save your wishlist, and unlock AI-powered room design tools.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 w-full">
                 {FEATURES.map(({ icon: Icon, label, desc }, i) => (
                   <motion.div
                     key={label}
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 + i * 0.07 }}
-                    className="p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-white/15 transition-colors"
+                    className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-white/15 transition-colors"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-600 to-cyan-600 flex items-center justify-center mb-3 shadow-md shadow-primary-950/50">
+                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-600 to-cyan-600 flex items-center justify-center mb-2.5 shadow-md shadow-primary-950/50">
                       <Icon className="w-4 h-4 text-white" />
                     </div>
-                    <p className="text-white text-sm font-semibold leading-snug">{label}</p>
+                    <p className="text-white text-[13px] font-semibold leading-snug">{label}</p>
                     <p className="text-blue-200/45 text-[11px] mt-1 leading-relaxed">{desc}</p>
                   </motion.div>
                 ))}
               </div>
-            </motion.div>
 
-            <p className="text-blue-200/35 text-xs">
-              © {getCurrentYear()} Anura Furniture – Dekatana
-            </p>
+              <p className="text-blue-200/35 text-xs pt-2">
+                © {getCurrentYear()} Anura Furniture – Dekatana
+              </p>
+            </motion.div>
           </div>
 
           {/* ── Right: Form ── */}
-          <div className="flex flex-col justify-center items-center px-5 sm:px-10 py-12 lg:py-16">
+          <div className="flex items-center justify-center px-6 sm:px-10 xl:px-16 py-14 min-h-screen lg:min-h-0">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.08 }}
-              className="w-full max-w-[400px]"
+              className="w-full max-w-[26rem]"
             >
               <Link
                 to="/"
