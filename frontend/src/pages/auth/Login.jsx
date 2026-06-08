@@ -182,13 +182,6 @@ export default function Login() {
                 </button>
               </form>
 
-              {/* Demo credentials */}
-              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">Demo Accounts:</p>
-                <p className="text-xs text-blue-500 dark:text-blue-300">Admin: admin@anura.lk / Admin123!</p>
-                <p className="text-xs text-blue-500 dark:text-blue-300">User: user@anura.lk / User123!</p>
-              </div>
-
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-200 dark:border-gray-700" />
