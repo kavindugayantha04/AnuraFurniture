@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
 import { fetchProducts, fetchCategories } from "../store/slices/productSlice";
 import { Helmet } from "react-helmet-async";
 import heroFurnitureImg from "../assets/hero/hero-furniture.jpg";
+import { getYearsInBusiness } from "../utils/dates";
 
 const CATEGORY_FALLBACK = [
   { name: "Living Room", slug: "living-room", count: "Shop now", img: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=90&w=900&auto=format&fit=crop" },
@@ -20,7 +21,15 @@ const TESTIMONIALS = [
   { name: "Amal Fernando", city: "Galle", initials: "AF", bg: "#F0FDF4", text: "Used the AI Room Designer before buying — it showed exactly how the sofa would look. Game changing.", stars: 5 },
 ];
 
-const MARQUEE = ["✦ Handcrafted in Sri Lanka", "✦ Free Island-wide Delivery", "✦ 5 Year Warranty", "✦ AI Room Designer", "✦ Custom Furniture Orders", "✦ Premium Solid Wood", "✦ 15 Years of Excellence", "✦ 5,000+ Happy Homes"];
+const MARQUEE_BASE = ["✦ Handcrafted in Sri Lanka", "✦ Free Island-wide Delivery", "✦ 5 Year Warranty", "✦ AI Room Designer", "✦ Custom Furniture Orders", "✦ Premium Solid Wood", "✦ 5,000+ Happy Homes"];
+
+function getMarqueeItems() {
+  return [
+    ...MARQUEE_BASE.slice(0, 6),
+    `✦ ${getYearsInBusiness()} Years of Excellence`,
+    MARQUEE_BASE[6],
+  ];
+}
 
 function Stars({ n = 5, size = 13 }) {
   return (
@@ -34,11 +43,19 @@ function Stars({ n = 5, size = 13 }) {
   );
 }
 
+function getProductPath(product) {
+  return `/product/${product.slug || product._id}`;
+}
+
+function getPrimaryImage(product) {
+  return product.images?.find((img) => img.isPrimary) || product.images?.[0];
+}
+
 function getProductBadge(product) {
-  if (product.isBestSeller) return { label: "Bestseller", color: "#2563eb" };
   if (product.isNewArrival) return { label: "New In", color: "#2D6A4F" };
-  if (product.discount > 0 || product.isOnSale) return { label: "Sale", color: "#C0392B" };
+  if (product.isBestSeller) return { label: "Bestseller", color: "#2563eb" };
   if (product.isTrending) return { label: "Trending", color: "#6C3483" };
+  if (product.discount > 0 || product.isOnSale) return { label: "Sale", color: "#C0392B" };
   if (product.isFeatured) return { label: "Featured", color: "#2563eb" };
   return null;
 }
@@ -48,8 +65,8 @@ function formatRs(amount) {
 }
 
 function FeaturedProductCard({ product, i }) {
-  const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
+  const productPath = getProductPath(product);
   const badge = getProductBadge(product);
   const finalPrice = product.discount > 0
     ? product.price - (product.price * product.discount) / 100
@@ -57,10 +74,9 @@ function FeaturedProductCard({ product, i }) {
   const originalPrice = product.discount > 0
     ? product.price
     : (product.originalPrice > product.price ? product.originalPrice : null);
-  const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
-  const subtitle = product.materials?.length
-    ? product.materials.slice(0, 2).join(" + ")
-    : (product.category?.name || "Premium Furniture");
+  const primaryImage = getPrimaryImage(product);
+  const subtitle = product.category?.name
+    || (product.materials?.length ? product.materials.slice(0, 2).join(" + ") : "Premium Furniture");
 
   return (
     <motion.div
@@ -68,49 +84,54 @@ function FeaturedProductCard({ product, i }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: i * 0.09, duration: 0.5 }}
-      onClick={() => navigate(`/product/${product.slug || product._id}`)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{ background: "#fff", borderRadius: 20, overflow: "hidden", border: "1px solid #EBEBEB", cursor: "pointer", transition: "transform .3s, box-shadow .3s", transform: hovered ? "translateY(-8px)" : "translateY(0)", boxShadow: hovered ? "0 24px 64px rgba(0,0,0,0.10)" : "0 2px 20px rgba(0,0,0,0.05)" }}
+      style={{ background: "#fff", borderRadius: 20, overflow: "hidden", border: "1px solid #EBEBEB", transition: "transform .3s, box-shadow .3s", transform: hovered ? "translateY(-8px)" : "translateY(0)", boxShadow: hovered ? "0 24px 64px rgba(0,0,0,0.10)" : "0 2px 20px rgba(0,0,0,0.05)" }}
     >
-      <div style={{ position: "relative", overflow: "hidden", background: "#F8F7F5", paddingTop: "100%" }}>
-        <motion.img
-          src={primaryImage?.url || "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=700"}
-          alt={primaryImage?.alt || product.name}
-          animate={{ scale: hovered ? 1.07 : 1 }}
-          transition={{ duration: 0.6 }}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-        />
-        {badge && (
-          <span style={{ position: "absolute", top: 14, left: 14, background: badge.color, color: "#fff", fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 30, letterSpacing: ".04em" }}>
-            {badge.label}
-          </span>
-        )}
-        <AnimatePresence>
-          {hovered && (
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }} transition={{ duration: 0.2 }}
-              style={{ position: "absolute", bottom: 12, left: 12, right: 12, background: "linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)", color: "#fff", borderRadius: 12, padding: "11px", textAlign: "center", fontSize: 13, fontWeight: 600, letterSpacing: ".03em", boxShadow: "0 8px 22px rgba(37,99,235,0.35)" }}>
-              View Product
-            </motion.div>
+      <Link
+        to={productPath}
+        aria-label={`View ${product.name} details`}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{ textDecoration: "none", color: "inherit", display: "block", cursor: "pointer" }}
+      >
+        <div style={{ position: "relative", overflow: "hidden", background: "#F8F7F5", paddingTop: "100%" }}>
+          <motion.img
+            src={primaryImage?.url || "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=700"}
+            alt={primaryImage?.alt || product.name}
+            animate={{ scale: hovered ? 1.07 : 1 }}
+            transition={{ duration: 0.6 }}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          />
+          {badge && (
+            <span style={{ position: "absolute", top: 14, left: 14, background: badge.color, color: "#fff", fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 30, letterSpacing: ".04em" }}>
+              {badge.label}
+            </span>
           )}
-        </AnimatePresence>
-      </div>
-      <div style={{ padding: "16px 18px 20px" }}>
-        <p style={{ fontSize: 11, color: "#AAA", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 5, fontWeight: 500 }}>{subtitle}</p>
-        <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, fontSize: 17, color: "#111", marginBottom: 8, lineHeight: 1.25 }}>{product.name}</p>
-        {product.numReviews > 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-            <Stars n={Math.round(product.ratings) || 5} size={12} />
-            <span style={{ fontSize: 11, color: "#AAA" }}>{product.ratings?.toFixed(1)} · {product.numReviews} reviews</span>
-          </div>
-        )}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-            <span style={{ fontWeight: 700, fontSize: 17, color: "#111" }}>{formatRs(finalPrice)}</span>
-            {originalPrice && <span style={{ fontSize: 12, color: "#CCC", textDecoration: "line-through" }}>{formatRs(originalPrice)}</span>}
+          <AnimatePresence>
+            {hovered && (
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }} transition={{ duration: 0.2 }}
+                style={{ position: "absolute", bottom: 12, left: 12, right: 12, background: "linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)", color: "#fff", borderRadius: 12, padding: "11px", textAlign: "center", fontSize: 13, fontWeight: 600, letterSpacing: ".03em", boxShadow: "0 8px 22px rgba(37,99,235,0.35)" }}>
+                View Product Details
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        <div style={{ padding: "16px 18px 20px" }}>
+          <p style={{ fontSize: 11, color: "#AAA", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 5, fontWeight: 500 }}>{subtitle}</p>
+          <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, fontSize: 17, color: "#111", marginBottom: 8, lineHeight: 1.25 }}>{product.name}</p>
+          {product.numReviews > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+              <Stars n={Math.round(product.ratings) || 5} size={12} />
+              <span style={{ fontSize: 11, color: "#AAA" }}>{product.ratings?.toFixed(1)} · {product.numReviews} reviews</span>
+            </div>
+          )}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <span style={{ fontWeight: 700, fontSize: 17, color: "#111" }}>{formatRs(finalPrice)}</span>
+              {originalPrice && <span style={{ fontSize: 12, color: "#CCC", textDecoration: "line-through" }}>{formatRs(originalPrice)}</span>}
+            </div>
           </div>
         </div>
-      </div>
+      </Link>
     </motion.div>
   );
 }
@@ -140,10 +161,12 @@ export default function Home() {
 
   const featuredProducts = useMemo(() => {
     if (!products?.length) return [];
-    const featured = products.filter((p) => p.isFeatured);
-    const rest = products.filter((p) => !p.isFeatured);
-    return [...featured, ...rest].slice(0, 4);
+    const featured = products.filter((p) => p.isFeatured || p.isBestSeller || p.isNewArrival || p.isTrending);
+    return (featured.length ? featured : products).slice(0, 4);
   }, [products]);
+
+  const yearsInBusiness = getYearsInBusiness();
+  const marqueeItems = useMemo(() => getMarqueeItems(), [yearsInBusiness]);
 
   const displayCategories = useMemo(() => {
     if (categories?.length > 0) {
@@ -156,6 +179,29 @@ export default function Home() {
     }
     return CATEGORY_FALLBACK;
   }, [categories, products]);
+
+  const heroProduct = featuredProducts[0] || products?.[0];
+  const heroPrimaryImage = heroProduct ? getPrimaryImage(heroProduct) : null;
+  const heroProductImg = heroPrimaryImage?.url
+    || "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=90&w=1000&auto=format&fit=crop";
+  const heroProductPrice = heroProduct
+    ? formatRs(heroProduct.discount > 0
+      ? heroProduct.price - (heroProduct.price * heroProduct.discount) / 100
+      : heroProduct.price)
+    : null;
+
+  // Hero image tilt
+  const mx = useMotionValue(0), my = useMotionValue(0);
+  const rotateY = useSpring(useTransform(mx, [-0.5, 0.5], [8, -8]), { stiffness: 150, damping: 20 });
+  const rotateX = useSpring(useTransform(my, [-0.5, 0.5], [-6, 6]), { stiffness: 150, damping: 20 });
+  const heroRef = useRef(null);
+  const handleHeroMove = e => {
+    if (!heroRef.current) return;
+    const r = heroRef.current.getBoundingClientRect();
+    mx.set((e.clientX - r.left) / r.width - 0.5);
+    my.set((e.clientY - r.top) / r.height - 0.5);
+  };
+  const heroReset = () => { mx.set(0); my.set(0); };
 
   return (
     <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", background: "#fff", color: "#111", overflowX: "hidden" }}>
@@ -383,20 +429,148 @@ export default function Home() {
               Transform your space with Sri Lanka&apos;s premium furniture collection. Crafted with artistry and designed for modern living.
             </motion.p>
 
-            <motion.div
-              className="hero-actions"
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.62, duration: 0.65 }}
-            >
-              <button type="button" className="hero-btn-primary" onClick={() => navigate("/shop")}>
-                Explore Collection
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </button>
-              <button type="button" className="hero-btn-secondary" onClick={() => navigate("/ai-room-designer")}>
-                AI Room Designer
-              </button>
-            </motion.div>
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }}
+                style={{ display: "flex", gap: 12, marginBottom: 52 }}>
+                <button onClick={() => navigate("/shop")} style={{ background: "linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)", color: "#fff", border: "none", borderRadius: 14, padding: "15px 32px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 9, letterSpacing: ".01em", transition: "transform .15s", boxShadow: "0 12px 30px rgba(37,99,235,0.32)" }}
+                  onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
+                  onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
+                  Explore Collection
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+                <button onClick={() => navigate("/ai-room-designer")} style={{ background: "#fff", color: "#1e3a8a", border: "1.5px solid #BFDBFE", borderRadius: 14, padding: "15px 28px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, transition: "border-color .15s, background .15s" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#2563eb"; e.currentTarget.style.background = "#EFF6FF"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "#BFDBFE"; e.currentTarget.style.background = "#fff"; }}>
+                  ✦ AI Room Designer
+                </button>
+              </motion.div>
+
+              {/* Trust row */}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+                style={{ display: "flex", gap: 0, borderTop: "1px solid #F0F0F0", paddingTop: 28 }}>
+                {[["5,000+", "Happy homes"], ["500+", "Products"], ["15 yrs", "Experience"], ["4.9★", "Rating"]].map(([v, l], i) => (
+                  <div key={l} style={{ flex: 1, borderRight: i < 3 ? "1px solid #F0F0F0" : "none", paddingRight: 20, paddingLeft: i > 0 ? 20 : 0 }}>
+                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 700, color: "#1e3a8a", lineHeight: 1 }}>{v}</p>
+                    <p style={{ fontSize: 12, color: "#AAA", marginTop: 4 }}>{l}</p>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+
+            {/* RIGHT: HERO IMAGE COMPOSITION */}
+            <div ref={heroRef} onMouseMove={handleHeroMove} onMouseLeave={heroReset}
+              style={{ position: "relative", height: "calc(100vh - 80px)", minHeight: 560, maxHeight: 720, perspective: 1800, overflow: "visible" }}>
+
+              {/* Blue glow behind composition */}
+              <div style={{ position: "absolute", inset: "8% 4% 12% 8%", background: "radial-gradient(ellipse, rgba(37,99,235,0.22) 0%, transparent 70%)", borderRadius: "50%", filter: "blur(40px)", pointerEvents: "none", zIndex: 0 }} />
+
+              <motion.div style={{ rotateX, rotateY, transformStyle: "preserve-3d", height: "100%", position: "relative", zIndex: 1 }}>
+
+                {/* Main hero image */}
+                <motion.div
+                  initial={{ opacity: 0, x: 40, scale: 0.96 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  transition={{ delay: 0.2, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                  style={{
+                    position: "absolute", top: "2%", left: "10%", right: "2%", bottom: "6%",
+                    borderRadius: 28, overflow: "hidden",
+                    boxShadow: "0 32px 80px rgba(37,99,235,0.22), 0 12px 40px rgba(15,23,42,0.12)",
+                    transform: "translateZ(0px)",
+                    border: "3px solid rgba(255,255,255,0.85)",
+                  }}
+                >
+                  <img src={heroProductImg} alt={heroProduct?.name || "Anura Furniture showroom"} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, transparent 85%, rgba(15,23,42,0.08) 100%)" }} />
+                </motion.div>
+
+                {/* Rating card — top left, prominent */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.85, y: -12 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ delay: 0.55, duration: 0.6 }}
+                  className="fa hero-float"
+                  style={{
+                    position: "absolute", top: "0%", left: "0%",
+                    borderRadius: 22, padding: "18px 22px",
+                    display: "flex", alignItems: "center", gap: 14,
+                    transform: "translateZ(90px)", minWidth: 200,
+                  }}
+                >
+                  <div style={{ width: 52, height: 52, borderRadius: 16, background: "linear-gradient(135deg,#FEF3C7,#FDE68A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 }}>⭐</div>
+                  <div>
+                    <p style={{ fontWeight: 800, fontSize: 26, color: "#1e3a8a", lineHeight: 1, fontFamily: "'Playfair Display', serif" }}>4.9/5</p>
+                    <p style={{ fontSize: 12, color: "#64748b", marginTop: 5, fontWeight: 500 }}>5,000+ happy reviews</p>
+                    <div style={{ marginTop: 6 }}><Stars n={5} size={12} /></div>
+                  </div>
+                </motion.div>
+
+                {/* Real product card — bottom left, large & clickable */}
+                {heroProduct && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.85, x: -16 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    transition={{ delay: 0.7, duration: 0.6 }}
+                    className="fb hero-float"
+                    onClick={() => navigate(getProductPath(heroProduct))}
+                    style={{
+                      position: "absolute", bottom: "10%", left: "-2%",
+                      borderRadius: 22, padding: "14px 16px",
+                      display: "flex", gap: 12, alignItems: "center",
+                      transform: "translateZ(110px)", maxWidth: 240, cursor: "pointer",
+                    }}
+                  >
+                    <div style={{ width: 64, height: 64, borderRadius: 16, overflow: "hidden", flexShrink: 0, border: "2px solid #EFF6FF" }}>
+                      <img src={heroProductImg} alt={heroProduct.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    </div>
+                    <div>
+                      <span style={{ background: "linear-gradient(135deg,#2563eb,#06b6d4)", color: "#fff", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20, letterSpacing: ".08em" }}>
+                        {heroProduct.isBestSeller ? "BESTSELLER" : heroProduct.isFeatured ? "FEATURED" : "SHOP NOW"}
+                      </span>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", marginTop: 6, lineHeight: 1.25, fontFamily: "'Cormorant Garamond', serif" }}>{heroProduct.name}</p>
+                      <p style={{ fontSize: 15, fontWeight: 800, color: "#2563eb", marginTop: 4 }}>{heroProductPrice}</p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Free delivery — top right, bold */}
+                <motion.div
+                  initial={{ opacity: 0, y: -12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.85, duration: 0.55 }}
+                  className="fa hero-float-accent"
+                  style={{
+                    position: "absolute", top: "4%", right: "0%",
+                    borderRadius: 20, padding: "14px 18px",
+                    display: "flex", alignItems: "center", gap: 12,
+                    transform: "translateZ(100px)",
+                  }}
+                >
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🚚</div>
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: 1 }}>Free Delivery</p>
+                    <p style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 3 }}>Island-wide · Same week</p>
+                  </div>
+                </motion.div>
+
+                {/* New arrivals pill — bottom right */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.95 }}
+                  className="fb"
+                  style={{
+                    position: "absolute", bottom: "6%", right: "0%",
+                    background: "#fff", border: "2px solid #BBF7D0",
+                    borderRadius: 20, padding: "12px 18px",
+                    boxShadow: "0 12px 36px rgba(22,163,74,0.15)",
+                    transform: "translateZ(80px)",
+                  }}
+                >
+                  <p style={{ fontSize: 13, fontWeight: 700, color: "#15803D" }}>✦ New arrivals weekly</p>
+                </motion.div>
+
+              </motion.div>
+            </div>
+
 
             <motion.div
               className="hero-trust"
@@ -428,7 +602,7 @@ export default function Home() {
       {/* ══ MARQUEE ═════════════════════════════════════════════ */}
       <div style={{ background: "linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #1e3a8a 100%)", padding: "15px 0", overflow: "hidden" }}>
         <div style={{ display: "flex", gap: 48, whiteSpace: "nowrap", animation: "marquee 26s linear infinite" }}>
-          {[...MARQUEE, ...MARQUEE].map((t, i) => (
+          {[...marqueeItems, ...marqueeItems].map((t, i) => (
             <span key={i} style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, fontWeight: 500, letterSpacing: ".06em", flexShrink: 0 }}>{t}</span>
           ))}
         </div>
@@ -571,7 +745,7 @@ export default function Home() {
       {/* ══ STATS ════════════════════════════════════════════════ */}
       <section style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #0891b2 100%)", padding: "72px 48px" }}>
         <div style={{ maxWidth: 1320, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
-          {[["5,000+", "Happy families across Sri Lanka", "🏠"], ["500+", "Premium products available", "🛋️"], ["15+", "Years of craftsmanship", "🏆"], ["99%", "Customer satisfaction rate", "⭐"]].map(([v, l, icon], i) => (
+          {[["5,000+", "Happy families across Sri Lanka", "🏠"], ["500+", "Premium products available", "🛋️"], [`${yearsInBusiness}+`, "Years of craftsmanship", "🏆"], ["99%", "Customer satisfaction rate", "⭐"]].map(([v, l, icon], i) => (
             <motion.div key={l} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
               style={{ textAlign: "center", padding: "20px 32px", borderRight: i < 3 ? "1px solid rgba(255,255,255,0.08)" : "none" }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>{icon}</div>

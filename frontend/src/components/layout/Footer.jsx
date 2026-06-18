@@ -4,6 +4,7 @@ import { Facebook, Instagram, Youtube, Phone, Mail, MapPin, ArrowRight, Send } f
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import BrandLogo from '../ui/BrandLogo';
+import { getCurrentYear } from '../../utils/dates';
 
 const QUICK_LINKS = [
   { path: '/', label: 'Home' },
@@ -18,6 +19,7 @@ const QUICK_LINKS = [
 const CATEGORIES = ['Living Room', 'Bedroom', 'Dining Room', 'Office', 'Outdoor', 'Kids Room', 'Storage'];
 
 export default function Footer() {
+  const currentYear = getCurrentYear();
   const [email, setEmail] = useState('');
 
   const handleNewsletter = (e) => {
@@ -127,7 +129,7 @@ export default function Footer() {
         {/* Bottom */}
         <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-gray-500 text-sm text-center sm:text-left">
-            © 2024 Anura Furniture – Dekatana. All rights reserved.
+            © {currentYear} Anura Furniture – Dekatana. All rights reserved.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             {[

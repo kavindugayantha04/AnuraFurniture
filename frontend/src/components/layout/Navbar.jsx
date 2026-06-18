@@ -22,6 +22,15 @@ const NAV_LINKS = [
 ];
 
 
+// Light content pages — navbar stays solid so it never overlaps breadcrumbs/body text
+const isLightContentRoute = (pathname) =>
+  pathname.startsWith('/product/') ||
+  pathname.startsWith('/cart') ||
+  pathname.startsWith('/checkout') ||
+  pathname.startsWith('/orders') ||
+  pathname.startsWith('/profile') ||
+  pathname.startsWith('/wishlist');
+
 export default function Navbar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();

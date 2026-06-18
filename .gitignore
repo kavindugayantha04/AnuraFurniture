@@ -112,6 +112,14 @@ public/uploads/
 *.pfx
 
 # ========================
+# WhatsApp Web.js (local session — never commit)
+# ========================
+.wwebjs_auth/
+.wwebjs_cache/
+backend/.wwebjs_auth/
+backend/.wwebjs_cache/
+
+# ========================
 # Optional local tooling
 # ========================
 .cursor/

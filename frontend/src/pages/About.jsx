@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { Award, Users, Heart, Truck, Star, ArrowRight, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { FOUNDING_YEAR, getYearsInBusiness } from '../utils/dates';
 
 const values = [
   { icon: '🎨', title: 'Craftsmanship', desc: 'Every piece is crafted by skilled artisans with decades of experience in traditional and modern woodworking techniques.' },
@@ -18,11 +19,13 @@ const team = [
 ];
 
 export default function About() {
+  const yearsInBusiness = getYearsInBusiness();
+
   return (
     <>
       <Helmet>
         <title>About Us – Anura Furniture Dekatana</title>
-        <meta name="description" content="Learn about Anura Furniture – Dekatana, Sri Lanka's premier furniture destination since 2010. Our story, mission, and team." />
+        <meta name="description" content={`Learn about Anura Furniture – Dekatana, Sri Lanka's premier furniture destination since ${FOUNDING_YEAR}. Our story, mission, and team.`} />
       </Helmet>
 
       <div className="min-h-screen">
@@ -38,7 +41,7 @@ export default function About() {
                 Furniture <span className="text-gradient">කලාවේ</span><br />මහ ගෙදර
               </h1>
               <p className="text-blue-200 text-xl leading-relaxed">
-                For over 14 years, we have been transforming Sri Lankan homes and offices with furniture that tells a story of quality, passion, and timeless beauty.
+                For over {yearsInBusiness} years, we have been transforming Sri Lankan homes and offices with furniture that tells a story of quality, passion, and timeless beauty.
               </p>
             </motion.div>
           </div>
@@ -48,7 +51,7 @@ export default function About() {
         <div className="bg-white dark:bg-dark-bg border-b border-gray-100 dark:border-gray-800 py-10 px-4">
           <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
-              { value: '2010', label: 'Founded' },
+              { value: String(FOUNDING_YEAR), label: 'Founded' },
               { value: '15,000+', label: 'Happy Customers' },
               { value: '500+', label: 'Products' },
               { value: '4.9/5', label: 'Rating' },
@@ -70,13 +73,13 @@ export default function About() {
                 <h2 className="section-title mb-6">A Legacy of Excellence</h2>
                 <div className="space-y-4 text-gray-600 dark:text-gray-400 leading-relaxed">
                   <p>
-                    Anura Furniture – Dekatana began in 2010 as a small workshop in Kadawatha with a simple vision: to bring world-class furniture craftsmanship to every Sri Lankan home at an accessible price.
+                    Anura Furniture – Dekatana began in {FOUNDING_YEAR} as a small workshop in Kadawatha with a simple vision: to bring world-class furniture craftsmanship to every Sri Lankan home at an accessible price.
                   </p>
                   <p>
                     Founded by master craftsman U.A. Piyasena, our journey began with hand-crafting custom furniture for clients across Colombo. Today, we have grown into Sri Lanka's most trusted AI-powered furniture destination, with a showroom spanning 15,000 sq. ft. and an online store serving customers island-wide.
                   </p>
                   <p>
-                    We blend 14 years of traditional craftsmanship with modern technology – including AI-powered design tools, virtual room visualization, and smart recommendation engines – to deliver an unmatched furniture experience.
+                    We blend {yearsInBusiness} years of traditional craftsmanship with modern technology – including AI-powered design tools, virtual room visualization, and smart recommendation engines – to deliver an unmatched furniture experience.
                   </p>
                 </div>
                 <div className="flex gap-4 mt-8">
