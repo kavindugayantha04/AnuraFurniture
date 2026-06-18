@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { fetchProducts, fetchCategories } from "../store/slices/productSlice";
 import { Helmet } from "react-helmet-async";
+import heroFurnitureImg from "../assets/hero/hero-furniture.jpg";
 
 const CATEGORY_FALLBACK = [
   { name: "Living Room", slug: "living-room", count: "Shop now", img: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=90&w=900&auto=format&fit=crop" },
@@ -156,29 +157,6 @@ export default function Home() {
     return CATEGORY_FALLBACK;
   }, [categories, products]);
 
-  const heroProduct = featuredProducts[0] || products?.[0];
-  const heroProductImg = heroProduct?.images?.find((i) => i.isPrimary)?.url
-    || heroProduct?.images?.[0]?.url
-    || "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=90&w=1000&auto=format&fit=crop";
-  const heroProductPrice = heroProduct
-    ? formatRs(heroProduct.discount > 0
-      ? heroProduct.price - (heroProduct.price * heroProduct.discount) / 100
-      : heroProduct.price)
-    : null;
-
-  // Hero image tilt
-  const mx = useMotionValue(0), my = useMotionValue(0);
-  const rotateY = useSpring(useTransform(mx, [-0.5, 0.5], [8, -8]), { stiffness: 150, damping: 20 });
-  const rotateX = useSpring(useTransform(my, [-0.5, 0.5], [-6, 6]), { stiffness: 150, damping: 20 });
-  const heroRef = useRef(null);
-  const handleHeroMove = e => {
-    if (!heroRef.current) return;
-    const r = heroRef.current.getBoundingClientRect();
-    mx.set((e.clientX - r.left) / r.width - 0.5);
-    my.set((e.clientY - r.top) / r.height - 0.5);
-  };
-  const heroReset = () => { mx.set(0); my.set(0); };
-
   return (
     <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", background: "#fff", color: "#111", overflowX: "hidden" }}>
       <Helmet>
@@ -190,281 +168,260 @@ export default function Home() {
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:#fff;} ::-webkit-scrollbar-thumb{background:#DDD;border-radius:3px;}
         @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-        @keyframes floatA{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
-        @keyframes floatB{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-        @keyframes fadeSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes pulseRing{0%{transform:scale(1);opacity:.6}70%{transform:scale(1.4);opacity:0}100%{transform:scale(1.4);opacity:0}}
-        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-        .fa{animation:floatA 5.5s ease-in-out infinite;}
-        .fb{animation:floatB 4s ease-in-out infinite;}
-        .pulse-ring::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid #22C55E;animation:pulseRing 2s ease-out infinite;}
-        .nav-link{background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:#475569;cursor:pointer;padding:6px 0;transition:color .2s;position:relative;}
-        .nav-link:hover{color:#2563eb;}
         .cat-card{cursor:pointer;transition:transform .3s;}
         .cat-card:hover{transform:translateY(-6px);}
+        .hero-fullscreen{
+          position:relative;
+          height:100vh;
+          min-height:100vh;
+          width:100%;
+          overflow:hidden;
+        }
+        .hero-bg{
+          position:absolute;
+          inset:0;
+          background-size:cover;
+          background-position:center;
+          background-repeat:no-repeat;
+        }
+        .hero-overlay{
+          position:absolute;
+          inset:0;
+          background:linear-gradient(90deg,rgba(255,255,255,0.55) 0%,rgba(255,255,255,0.25) 40%,rgba(255,255,255,0.08) 70%,rgba(255,255,255,0) 100%);
+          pointer-events:none;
+        }
+        .hero-inner{
+          position:relative;
+          z-index:2;
+          height:100%;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          padding:calc(5.5rem + 40px) clamp(1.25rem,4vw,3rem) 2.5rem;
+          width:100%;
+        }
+        .hero-content{
+          width:min(100%,620px);
+          transform:translateX(clamp(-6%,-4vw,-2%));
+          margin-right:clamp(8%,14vw,18%);
+        }
         .hero-title-en{
           display:block;
           font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-          font-size:clamp(60px,7.2vw,108px);
+          font-size:clamp(70px,7vw,120px);
           font-weight:800;
           font-style:normal;
-          line-height:1;
-          letter-spacing:-.025em;
-          background:linear-gradient(to right,#1e3a8a 0%,#2563eb 35%,#06b6d4 62%,#3b82f6 100%);
+          line-height:0.95;
+          letter-spacing:-.03em;
+          background:linear-gradient(to right,#1E3A8A 0%,#2563EB 50%,#38BDF8 100%);
           -webkit-background-clip:text;
           -webkit-text-fill-color:transparent;
           background-clip:text;
         }
         .hero-title-si{
           display:block;
-          margin-top:clamp(12px,1.8vw,20px);
+          margin-top:clamp(8px,1.4vw,16px);
           font-family:'Abhaya Libre','Noto Sans Sinhala','Iskoola Pota',sans-serif;
-          font-size:clamp(40px,5.2vw,72px);
+          font-size:clamp(28px,4.2vw,60px);
           font-weight:700;
-          line-height:1.15;
+          line-height:1.12;
           letter-spacing:.02em;
         }
-        .hero-si-dark{
-          color:#0f172a;
+        .hero-si-dark{color:#0F172A;font-weight:800;}
+        .hero-si-blue{color:#2563EB;font-weight:800;}
+        .hero-desc{
+          font-size:clamp(15px,1.6vw,17px);
+          color:#334155;
+          line-height:1.8;
+          margin-bottom:clamp(28px,4vw,40px);
+          max-width:480px;
+          text-shadow:0 1px 12px rgba(255,255,255,0.6);
+        }
+        .hero-actions{
+          display:flex;
+          flex-wrap:wrap;
+          gap:12px;
+          margin-bottom:clamp(32px,4vw,44px);
+        }
+        .hero-btn-primary{
+          background:linear-gradient(135deg,#2563eb 0%,#06b6d4 100%);
+          color:#fff;
+          border:none;
+          border-radius:14px;
+          padding:15px 32px;
+          font-size:14px;
+          font-weight:600;
+          cursor:pointer;
+          display:inline-flex;
+          align-items:center;
+          gap:9px;
+          letter-spacing:.01em;
+          transition:transform .15s,box-shadow .15s;
+          box-shadow:0 12px 30px rgba(37,99,235,0.32);
+        }
+        .hero-btn-primary:hover{transform:translateY(-2px);}
+        .hero-btn-secondary{
+          background:rgba(255,255,255,0.92);
+          color:#1e3a8a;
+          border:1.5px solid #BFDBFE;
+          border-radius:14px;
+          padding:15px 28px;
+          font-size:14px;
+          font-weight:600;
+          cursor:pointer;
+          display:inline-flex;
+          align-items:center;
+          gap:8px;
+          transition:border-color .15s,background .15s;
+        }
+        .hero-btn-secondary:hover{border-color:#2563eb;background:#EFF6FF;}
+        .hero-trust{
+          display:flex;
+          gap:40px;
+          background:rgba(255,255,255,0.55);
+          backdrop-filter:blur(8px);
+          -webkit-backdrop-filter:blur(8px);
+          padding:12px 24px;
+          border-radius:14px;
+          width:fit-content;
+          border:1px solid rgba(255,255,255,0.45);
+          box-shadow:0 4px 24px rgba(0,0,0,0.06);
+        }
+        .hero-trust-item{
+          display:flex;
+          flex-direction:column;
+          gap:3px;
+        }
+        .hero-trust-number{
+          font-family:'Cormorant Garamond',Georgia,serif;
+          font-size:clamp(18px,2.2vw,22px);
           font-weight:800;
+          color:#2563EB;
+          line-height:1.2;
         }
-        .hero-si-gradient{
-          background:linear-gradient(to right,#2563eb 0%,#0891b2 45%,#06b6d4 100%);
-          -webkit-background-clip:text;
-          -webkit-text-fill-color:transparent;
-          background-clip:text;
-          font-weight:800;
+        .hero-trust-label{
+          font-family:'Inter','Segoe UI',sans-serif;
+          font-size:clamp(11px,1.1vw,13px);
+          font-weight:600;
+          color:#111827;
+          line-height:1.3;
         }
-        .hero-float{
-          background:rgba(255,255,255,0.96);
-          backdrop-filter:blur(16px);
-          -webkit-backdrop-filter:blur(16px);
-          border:1px solid rgba(255,255,255,0.9);
-          box-shadow:0 20px 60px rgba(37,99,235,0.18),0 8px 24px rgba(15,23,42,0.08);
-          z-index:30;
+        @media (max-width:768px){
+          .hero-overlay{
+            background:linear-gradient(180deg,rgba(255,255,255,0.55) 0%,rgba(255,255,255,0.25) 45%,rgba(255,255,255,0.08) 75%,rgba(255,255,255,0) 100%);
+          }
+          .hero-inner{align-items:flex-end;padding:calc(5.5rem + 40px) 1.25rem 3rem;}
+          .hero-content{margin-right:0;transform:none;width:100%;}
+          .hero-trust{gap:16px 20px;flex-wrap:wrap;padding:10px 18px;}
+          .hero-trust-item{min-width:auto;}
+          .hero-actions{flex-direction:column;}
+          .hero-btn-primary,.hero-btn-secondary{width:100%;justify-content:center;}
         }
-        .hero-float-accent{
-          background:linear-gradient(135deg,#2563eb 0%,#0891b2 55%,#06b6d4 100%);
-          box-shadow:0 20px 50px rgba(37,99,235,0.38);
-          z-index:30;
+        @media (min-width:769px) and (max-width:1024px){
+          .hero-content{width:min(100%,540px);}
         }
       `}</style>
 
       {/* ══ HERO ════════════════════════════════════════════════ */}
-      <section style={{ minHeight: "100vh", background: "linear-gradient(160deg, #ffffff 0%, #f5f9ff 45%, #eef5ff 100%)", paddingTop: 80, display: "flex", flexDirection: "column", position: "relative", overflow: "visible" }}>
-        {/* Subtle grid bg */}
-        <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(37,99,235,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(37,99,235,0.05) 1px, transparent 1px)", backgroundSize: "60px 60px", opacity: 0.6, pointerEvents: "none" }} />
+      <section className="hero-fullscreen" aria-label="Hero">
+        <div
+          className="hero-bg"
+          style={{ backgroundImage: `url(${heroFurnitureImg})` }}
+          role="img"
+          aria-label="Luxury furniture showroom"
+        />
+        <div className="hero-overlay" />
 
-        {/* Soft blobs */}
-        <div style={{ position: "absolute", top: "16%", right: "6%", width: 480, height: 480, background: "radial-gradient(circle, rgba(37,99,235,0.12) 0%, transparent 70%)", borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "8%", left: "4%", width: 380, height: 380, background: "radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 70%)", borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none" }} />
+        <div className="hero-inner">
+          <div className="hero-content">
+            <motion.h1
+              initial={{ opacity: 0, y: 28 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <motion.span
+                initial={{ opacity: 0, y: 22 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.22, duration: 0.7 }}
+                className="hero-title-en"
+              >
+                Furniture
+              </motion.span>
 
-        <div style={{ maxWidth: 1320, margin: "0 auto", padding: "40px 48px 0", width: "100%", flex: 1, display: "flex", alignItems: "stretch" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 64, alignItems: "center", width: "100%" }}>
-
-            {/* LEFT COPY */}
-            <div style={{ paddingBottom: 60 }}>
-              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                style={{ display: "inline-flex", alignItems: "center", gap: 8, border: "1px solid #BFDBFE", borderRadius: 30, padding: "7px 16px", fontSize: 12, color: "#1e3a8a", fontWeight: 600, marginBottom: 32, background: "#EFF6FF" }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22C55E", display: "inline-block", position: "relative" }} className="pulse-ring" />
-                ✨ Premium Furniture Shop · Dekatana
-              </motion.div>
-
-              <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.7 }}
-                style={{ marginBottom: 8 }}>
+              <motion.span
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.38, duration: 0.7 }}
+                className="hero-title-si"
+              >
                 <motion.span
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.22, duration: 0.65 }}
-                  className="hero-title-en"
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.46, duration: 0.6 }}
+                  className="hero-si-dark"
                 >
-                  Furniture
+                  කලාවේ
                 </motion.span>
-
+                {" "}
                 <motion.span
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.38, duration: 0.7 }}
-                  className="hero-title-si"
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.54, duration: 0.6 }}
+                  className="hero-si-blue"
                 >
-                  <motion.span
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.44, duration: 0.55 }}
-                    className="hero-si-dark"
-                  >
-                    කලාවේ
-                  </motion.span>
-                  {" "}
-                  <motion.span
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.52, duration: 0.55 }}
-                    className="hero-si-gradient"
-                  >
-                    මහ ගෙදර
-                  </motion.span>
+                  මහ ගෙදර
                 </motion.span>
-              </motion.h1>
+              </motion.span>
+            </motion.h1>
 
-              <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
-                style={{ fontSize: 16, color: "#64748b", lineHeight: 1.85, marginBottom: 40, maxWidth: 440 }}>
-                Transform your space with Sri Lanka&apos;s most premium furniture collection. Crafted with artistry, delivered with care.
-              </motion.p>
+            <motion.p
+              className="hero-desc"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.65 }}
+            >
+              Transform your space with Sri Lanka&apos;s premium furniture collection. Crafted with artistry and designed for modern living.
+            </motion.p>
 
-              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }}
-                style={{ display: "flex", gap: 12, marginBottom: 52 }}>
-                <button onClick={() => navigate("/shop")} style={{ background: "linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)", color: "#fff", border: "none", borderRadius: 14, padding: "15px 32px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 9, letterSpacing: ".01em", transition: "transform .15s", boxShadow: "0 12px 30px rgba(37,99,235,0.32)" }}
-                  onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
-                  onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
-                  Explore Collection
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </button>
-                <button onClick={() => navigate("/ai-room-designer")} style={{ background: "#fff", color: "#1e3a8a", border: "1.5px solid #BFDBFE", borderRadius: 14, padding: "15px 28px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, transition: "border-color .15s, background .15s" }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#2563eb"; e.currentTarget.style.background = "#EFF6FF"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = "#BFDBFE"; e.currentTarget.style.background = "#fff"; }}>
-                  ✦ AI Room Designer
-                </button>
-              </motion.div>
+            <motion.div
+              className="hero-actions"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.62, duration: 0.65 }}
+            >
+              <button type="button" className="hero-btn-primary" onClick={() => navigate("/shop")}>
+                Explore Collection
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+              <button type="button" className="hero-btn-secondary" onClick={() => navigate("/ai-room-designer")}>
+                AI Room Designer
+              </button>
+            </motion.div>
 
-              {/* Trust row */}
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-                style={{ display: "flex", gap: 0, borderTop: "1px solid #F0F0F0", paddingTop: 28 }}>
-                {[["5,000+", "Happy homes"], ["500+", "Products"], ["15 yrs", "Experience"], ["4.9★", "Rating"]].map(([v, l], i) => (
-                  <div key={l} style={{ flex: 1, borderRight: i < 3 ? "1px solid #F0F0F0" : "none", paddingRight: 20, paddingLeft: i > 0 ? 20 : 0 }}>
-                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 700, color: "#1e3a8a", lineHeight: 1 }}>{v}</p>
-                    <p style={{ fontSize: 12, color: "#AAA", marginTop: 4 }}>{l}</p>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-
-            {/* RIGHT: HERO IMAGE COMPOSITION */}
-            <div ref={heroRef} onMouseMove={handleHeroMove} onMouseLeave={heroReset}
-              style={{ position: "relative", height: "calc(100vh - 80px)", minHeight: 560, maxHeight: 720, perspective: 1800, overflow: "visible" }}>
-
-              {/* Blue glow behind composition */}
-              <div style={{ position: "absolute", inset: "8% 4% 12% 8%", background: "radial-gradient(ellipse, rgba(37,99,235,0.22) 0%, transparent 70%)", borderRadius: "50%", filter: "blur(40px)", pointerEvents: "none", zIndex: 0 }} />
-
-              <motion.div style={{ rotateX, rotateY, transformStyle: "preserve-3d", height: "100%", position: "relative", zIndex: 1 }}>
-
-                {/* Main hero image */}
-                <motion.div
-                  initial={{ opacity: 0, x: 40, scale: 0.96 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  transition={{ delay: 0.2, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-                  style={{
-                    position: "absolute", top: "2%", left: "10%", right: "2%", bottom: "6%",
-                    borderRadius: 28, overflow: "hidden",
-                    boxShadow: "0 32px 80px rgba(37,99,235,0.22), 0 12px 40px rgba(15,23,42,0.12)",
-                    transform: "translateZ(0px)",
-                    border: "3px solid rgba(255,255,255,0.85)",
-                  }}
-                >
-                  <img src={heroProductImg} alt={heroProduct?.name || "Anura Furniture showroom"} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, transparent 85%, rgba(15,23,42,0.08) 100%)" }} />
-                </motion.div>
-
-                {/* Rating card — top left, prominent */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.85, y: -12 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ delay: 0.55, duration: 0.6 }}
-                  className="fa hero-float"
-                  style={{
-                    position: "absolute", top: "0%", left: "0%",
-                    borderRadius: 22, padding: "18px 22px",
-                    display: "flex", alignItems: "center", gap: 14,
-                    transform: "translateZ(90px)", minWidth: 200,
-                  }}
-                >
-                  <div style={{ width: 52, height: 52, borderRadius: 16, background: "linear-gradient(135deg,#FEF3C7,#FDE68A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 }}>⭐</div>
-                  <div>
-                    <p style={{ fontWeight: 800, fontSize: 26, color: "#1e3a8a", lineHeight: 1, fontFamily: "'Playfair Display', serif" }}>4.9/5</p>
-                    <p style={{ fontSize: 12, color: "#64748b", marginTop: 5, fontWeight: 500 }}>5,000+ happy reviews</p>
-                    <div style={{ marginTop: 6 }}><Stars n={5} size={12} /></div>
-                  </div>
-                </motion.div>
-
-                {/* Real product card — bottom left, large & clickable */}
-                {heroProduct && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.85, x: -16 }}
-                    animate={{ opacity: 1, scale: 1, x: 0 }}
-                    transition={{ delay: 0.7, duration: 0.6 }}
-                    className="fb hero-float"
-                    onClick={() => navigate(`/product/${heroProduct.slug || heroProduct._id}`)}
-                    style={{
-                      position: "absolute", bottom: "10%", left: "-2%",
-                      borderRadius: 22, padding: "14px 16px",
-                      display: "flex", gap: 12, alignItems: "center",
-                      transform: "translateZ(110px)", maxWidth: 240, cursor: "pointer",
-                    }}
-                  >
-                    <div style={{ width: 64, height: 64, borderRadius: 16, overflow: "hidden", flexShrink: 0, border: "2px solid #EFF6FF" }}>
-                      <img src={heroProductImg} alt={heroProduct.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    </div>
-                    <div>
-                      <span style={{ background: "linear-gradient(135deg,#2563eb,#06b6d4)", color: "#fff", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20, letterSpacing: ".08em" }}>
-                        {heroProduct.isBestSeller ? "BESTSELLER" : heroProduct.isFeatured ? "FEATURED" : "SHOP NOW"}
-                      </span>
-                      <p style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", marginTop: 6, lineHeight: 1.25, fontFamily: "'Cormorant Garamond', serif" }}>{heroProduct.name}</p>
-                      <p style={{ fontSize: 15, fontWeight: 800, color: "#2563eb", marginTop: 4 }}>{heroProductPrice}</p>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Free delivery — top right, bold */}
-                <motion.div
-                  initial={{ opacity: 0, y: -12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.85, duration: 0.55 }}
-                  className="fa hero-float-accent"
-                  style={{
-                    position: "absolute", top: "4%", right: "0%",
-                    borderRadius: 20, padding: "14px 18px",
-                    display: "flex", alignItems: "center", gap: 12,
-                    transform: "translateZ(100px)",
-                  }}
-                >
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🚚</div>
-                  <div>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: 1 }}>Free Delivery</p>
-                    <p style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 3 }}>Island-wide · Same week</p>
-                  </div>
-                </motion.div>
-
-                {/* New arrivals pill — bottom right */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.95 }}
-                  className="fb"
-                  style={{
-                    position: "absolute", bottom: "6%", right: "0%",
-                    background: "#fff", border: "2px solid #BBF7D0",
-                    borderRadius: 20, padding: "12px 18px",
-                    boxShadow: "0 12px 36px rgba(22,163,74,0.15)",
-                    transform: "translateZ(80px)",
-                  }}
-                >
-                  <p style={{ fontSize: 13, fontWeight: 700, color: "#15803D" }}>✦ New arrivals weekly</p>
-                </motion.div>
-
-              </motion.div>
-            </div>
-
+            <motion.div
+              className="hero-trust"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.76, duration: 0.65 }}
+            >
+              <div className="hero-trust-item">
+                <span className="hero-trust-number">★★★★★ 4.9</span>
+                <span className="hero-trust-label">Rating</span>
+              </div>
+              <div className="hero-trust-item">
+                <span className="hero-trust-number">5000+</span>
+                <span className="hero-trust-label">Happy Homes</span>
+              </div>
+              <div className="hero-trust-item">
+                <span className="hero-trust-number">500+</span>
+                <span className="hero-trust-label">Products</span>
+              </div>
+              <div className="hero-trust-item">
+                <span className="hero-trust-number">15 Years</span>
+                <span className="hero-trust-label">Experience</span>
+              </div>
+            </motion.div>
           </div>
-        </div>
-
-        {/* Bottom scroll nudge */}
-        <div style={{ textAlign: "center", paddingBottom: 28, position: "relative", zIndex: 2 }}>
-          <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 2 }} style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-            <div style={{ width: 22, height: 36, border: "1.5px solid #DDD", borderRadius: 11, display: "flex", justifyContent: "center", alignItems: "flex-start", paddingTop: 5 }}>
-              <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 1.4 }} style={{ width: 3, height: 7, background: "#BBB", borderRadius: 2 }} />
-            </div>
-            <p style={{ fontSize: 10, color: "#CCC", letterSpacing: ".12em", textTransform: "uppercase" }}>Scroll</p>
-          </motion.div>
         </div>
       </section>
 
